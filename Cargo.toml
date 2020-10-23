@@ -5,6 +5,7 @@ members = [
     "rustc_codegen_spirv",
     "spirv-builder",
     "spirv-std",
+    "spirv-tools",
     "spirv-tools-sys",
 ]
 
