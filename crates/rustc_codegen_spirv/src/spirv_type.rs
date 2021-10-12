@@ -4,9 +4,7 @@ use crate::codegen_cx::CodegenCx;
 use bimap::BiHashMap;
 use indexmap::IndexSet;
 use rspirv::dr::Operand;
-use rspirv::spirv::{
-    AccessQualifier, Capability, Decoration, Dim, ImageFormat, StorageClass, Word,
-};
+use rspirv::spirv::{Capability, Decoration, Dim, ImageFormat, StorageClass, Word};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
@@ -78,7 +76,6 @@ pub enum SpirvType {
         multisampled: u32,
         sampled: u32,
         image_format: ImageFormat,
-        access_qualifier: Option<AccessQualifier>,
     },
     Sampler,
     SampledImage {
@@ -260,7 +257,6 @@ impl SpirvType {
                 multisampled,
                 sampled,
                 image_format,
-                access_qualifier,
             } => cx.emit_global().type_image_id(
                 id,
                 sampled_type,
@@ -270,7 +266,7 @@ impl SpirvType {
                 multisampled,
                 sampled,
                 image_format,
-                access_qualifier,
+                None,
             ),
             Self::Sampler => cx.emit_global().type_sampler_id(id),
             Self::AccelerationStructureKhr => {
@@ -535,7 +531,6 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 multisampled,
                 sampled,
                 image_format,
-                access_qualifier,
             } => f
                 .debug_struct("Image")
                 .field("id", &self.id)
@@ -546,7 +541,6 @@ impl fmt::Debug for SpirvTypePrinter<'_, '_> {
                 .field("multisampled", &multisampled)
                 .field("sampled", &sampled)
                 .field("image_format", &image_format)
-                .field("access_qualifier", &access_qualifier)
                 .finish(),
             SpirvType::Sampler => f.debug_struct("Sampler").field("id", &self.id).finish(),
             SpirvType::SampledImage { image_type } => f
@@ -696,7 +690,6 @@ impl SpirvTypePrinter<'_, '_> {
                 multisampled,
                 sampled,
                 image_format,
-                access_qualifier,
             } => f
                 .debug_struct("Image")
                 .field("sampled_type", &self.cx.debug_type(sampled_type))
@@ -706,7 +699,6 @@ impl SpirvTypePrinter<'_, '_> {
                 .field("multisampled", &multisampled)
                 .field("sampled", &sampled)
                 .field("image_format", &image_format)
-                .field("access_qualifier", &access_qualifier)
                 .finish(),
             SpirvType::Sampler => f.write_str("Sampler"),
             SpirvType::SampledImage { image_type } => f

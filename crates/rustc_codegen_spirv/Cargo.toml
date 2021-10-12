@@ -38,13 +38,13 @@ syn = { version = "1", features = ["visit", "visit-mut"] }
 ar = "0.9.0"
 bimap = "0.6"
 indexmap = "1.6.0"
-rspirv = { git = "https://github.com/msiglreith/rspirv.git", branch = "nv_bindless_texture" } # { path = "../../../rspirv/rspirv" } # "0.10"
+rspirv = "0.10"
 rustc-demangle = "0.1.21"
 sanitize-filename = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 smallvec = "1.6.1"
-spirv-tools = { git = "https://github.com/msiglreith/spirv-tools-rs.git", branch = "nv_bindless_texture" } # { path = "../../../spirv-tools-rs" } # { version = "0.6.1", default-features = false }
+spirv-tools = { version = "0.7", default-features = false }
 topological-sort = "0.1"
 
 [dev-dependencies]

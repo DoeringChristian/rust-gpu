@@ -391,7 +391,6 @@ impl BuilderSpirv {
         add_cap(&mut builder, &mut enabled_capabilities, Capability::Linkage);
 
         builder.memory_model(AddressingModel::PhysicalStorageBuffer64, memory_model);
-        builder.sampler_image_addressing_mode_nv(64);
 
         Self {
             builder: RefCell::new(builder),

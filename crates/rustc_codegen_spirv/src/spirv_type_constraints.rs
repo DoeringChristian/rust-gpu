@@ -745,7 +745,10 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         // SPV_AMD_shader_fragment_mask
         Op::FragmentMaskFetchAMD | Op::FragmentFetchAMD => reserved!(SPV_AMD_shader_fragment_mask),
         // SPV_KHR_shader_clock
-        Op::ReadClockKHR => reserved!(SPV_KHR_shader_clock),
+        Op::ReadClockKHR => {
+            // NOTE(eddyb) we actually use these despite not being in the standard yet.
+            // reserved!(SPV_KHR_shader_clock)
+        }
         // SPV_NV_mesh_shader
         Op::WritePackedPrimitiveIndices4x8NV => reserved!(SPV_NV_mesh_shader),
         // SPV_NV_ray_tracing
@@ -942,12 +945,6 @@ pub fn instruction_signatures(op: Op) -> Option<&'static [InstSig<'static>]> {
         | Op::SubgroupAvcSicGetInterRawSadsINTEL => {
             reserved!(SPV_INTEL_device_side_avc_motion_estimation);
         }
-
-        // SPV_NV_bindless_texture
-        Op::ConvertUToImageNV
-        | Op::ConvertImageToUNV
-        | Op::ConvertUToSampledImageNV
-        | Op::SamplerImageAddressingModeNV => {}
     }
 
     None

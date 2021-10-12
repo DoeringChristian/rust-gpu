@@ -9,24 +9,22 @@ use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorReported;
 use rustc_index::vec::Idx;
 use rustc_middle::bug;
-use rustc_middle::ty::layout::{FnAbiExt, TyAndLayout};
+use rustc_middle::ty::layout::{FnAbiOf, LayoutOf, TyAndLayout};
 use rustc_middle::ty::subst::SubstsRef;
 use rustc_middle::ty::{
-    Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut, UintTy,
+    self, Const, FloatTy, GeneratorSubsts, IntTy, ParamEnv, PolyFnSig, Ty, TyKind, TypeAndMut,
+    UintTy,
 };
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_span::DUMMY_SP;
 use rustc_target::abi::call::{CastTarget, FnAbi, PassMode, Reg, RegKind};
-use rustc_target::abi::{
-    Abi, Align, FieldsShape, LayoutOf, Primitive, Scalar, Size, VariantIdx, Variants,
-};
+use rustc_target::abi::{Abi, Align, FieldsShape, Primitive, Scalar, Size, VariantIdx, Variants};
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::fmt;
 
 use num_traits::cast::FromPrimitive;
-use rspirv::spirv;
 
 /// If a struct contains a pointer to itself, even indirectly, then doing a naiive recursive walk
 /// of the fields will result in an infinite loop. Because pointers are the only thing that are
@@ -150,13 +148,17 @@ impl<'tcx> ConvSpirvType<'tcx> for PointeeTy<'tcx> {
     fn spirv_type(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
             PointeeTy::Ty(ty) => ty.spirv_type(span, cx),
-            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type(span, cx),
+            PointeeTy::Fn(ty) => cx
+                .fn_abi_of_fn_ptr(ty, ty::List::empty())
+                .spirv_type(span, cx),
         }
     }
     fn spirv_type_immediate(&self, span: Span, cx: &CodegenCx<'tcx>) -> Word {
         match *self {
             PointeeTy::Ty(ty) => ty.spirv_type_immediate(span, cx),
-            PointeeTy::Fn(ty) => FnAbi::of_fn_ptr(cx, ty, &[]).spirv_type_immediate(span, cx),
+            PointeeTy::Fn(ty) => cx
+                .fn_abi_of_fn_ptr(ty, ty::List::empty())
+                .spirv_type_immediate(span, cx),
         }
     }
 }
@@ -712,17 +714,17 @@ fn trans_intrinsic_type<'tcx>(
                 return Err(ErrorReported);
             }
 
-            fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
-                cx: &CodegenCx<'tcx>,
-                const_: &'tcx Const<'tcx>,
-            ) -> P {
-                let adt_def = const_.ty.ty_adt_def().unwrap();
-                assert!(adt_def.is_enum());
-                let destructured = cx.tcx.destructure_const(ParamEnv::reveal_all().and(const_));
-                let idx = destructured.variant.unwrap();
-                let value = const_.ty.discriminant_for_variant(cx.tcx, idx).unwrap().val as u64;
-                <_>::from_u64(value).unwrap()
-            }
+            // fn type_from_variant_discriminant<'tcx, P: FromPrimitive>(
+            //     cx: &CodegenCx<'tcx>,
+            //     const_: &'tcx Const<'tcx>,
+            // ) -> P {
+            //     let adt_def = const_.ty.ty_adt_def().unwrap();
+            //     assert!(adt_def.is_enum());
+            //     let destructured = cx.tcx.destructure_const(ParamEnv::reveal_all().and(const_));
+            //     let idx = destructured.variant.unwrap();
+            //     let value = const_.ty.discriminant_for_variant(cx.tcx, idx).unwrap().val as u64;
+            //     <_>::from_u64(value).unwrap()
+            // }
 
             let sampled_type = match substs.type_at(0).kind() {
                 TyKind::Int(int) => match int {
@@ -757,25 +759,37 @@ fn trans_intrinsic_type<'tcx>(
                 }
             };
 
-            let dim: spirv::Dim = type_from_variant_discriminant(cx, substs.const_at(1));
-            let depth: u32 = type_from_variant_discriminant(cx, substs.const_at(2));
-            let arrayed: u32 = type_from_variant_discriminant(cx, substs.const_at(3));
-            let multisampled: u32 = type_from_variant_discriminant(cx, substs.const_at(4));
-            let sampled: u32 = type_from_variant_discriminant(cx, substs.const_at(5));
-            let image_format: spirv::ImageFormat =
-                type_from_variant_discriminant(cx, substs.const_at(6));
+            // let dim: spirv::Dim = type_from_variant_discriminant(cx, substs.const_at(1));
+            // let depth: u32 = type_from_variant_discriminant(cx, substs.const_at(2));
+            // let arrayed: u32 = type_from_variant_discriminant(cx, substs.const_at(3));
+            // let multisampled: u32 = type_from_variant_discriminant(cx, substs.const_at(4));
+            // let sampled: u32 = type_from_variant_discriminant(cx, substs.const_at(5));
+            // let image_format: spirv::ImageFormat =
+            //     type_from_variant_discriminant(cx, substs.const_at(6));
 
-            let access_qualifier = {
-                let option = cx
-                    .tcx
-                    .destructure_const(ParamEnv::reveal_all().and(substs.const_at(7)));
-
-                match option.variant.map(|i| i.as_u32()).unwrap_or(0) {
-                    0 => None,
-                    1 => Some(type_from_variant_discriminant(cx, option.fields[0])),
-                    _ => unreachable!(),
+            fn const_int_value<'tcx, P: FromPrimitive>(
+                cx: &CodegenCx<'tcx>,
+                const_: &'tcx Const<'tcx>,
+            ) -> Result<P, ErrorReported> {
+                assert!(const_.ty.is_integral());
+                let value = const_.eval_bits(cx.tcx, ParamEnv::reveal_all(), const_.ty);
+                match P::from_u128(value) {
+                    Some(v) => Ok(v),
+                    None => {
+                        cx.tcx
+                            .sess
+                            .err(&format!("Invalid value for Image const generic: {}", value));
+                        Err(ErrorReported)
+                    }
                 }
-            };
+            }
+
+            let dim = const_int_value(cx, substs.const_at(1))?;
+            let depth = const_int_value(cx, substs.const_at(2))?;
+            let arrayed = const_int_value(cx, substs.const_at(3))?;
+            let multisampled = const_int_value(cx, substs.const_at(4))?;
+            let sampled = const_int_value(cx, substs.const_at(5))?;
+            let image_format = const_int_value(cx, substs.const_at(6))?;
 
             let ty = SpirvType::Image {
                 sampled_type,
@@ -785,7 +799,6 @@ fn trans_intrinsic_type<'tcx>(
                 multisampled,
                 sampled,
                 image_format,
-                access_qualifier,
             };
             Ok(ty.def(span, cx))
         }
