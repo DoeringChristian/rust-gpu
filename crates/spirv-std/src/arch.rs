@@ -245,3 +245,10 @@ pub fn signed_min<T: SignedInteger>(a: T, b: T) -> T {
 pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
     unsafe { call_glsl_op_with_ints::<_, 42>(a, b) }
 }
+
+/// Convert a 64-bit handle into a uniform or storage buffer.
+#[spirv_std_macros::gpu_only]
+#[cfg_attr(target_arch = "spirv", spirv(resource_from_handle_intrinsic))]
+pub unsafe extern "unadjusted" fn resource_from_handle<T>(_resource: u64) -> T {
+    unimplemented!()
+}
