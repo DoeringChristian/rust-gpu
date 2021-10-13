@@ -4,7 +4,7 @@
 %7 = OpLabel
 %8 = OpVariable  %5  Function
 OpLine %9 7 37
-%10 = OpLoad  %11  %4
+%10 = OpLoad  %11  %4 Aligned 4
 OpLine %12 1013 17
 OpStore %8 %10
 OpLine %13 890 8

@@ -2,10 +2,12 @@ OpCapability Float64
 OpCapability Int16
 OpCapability Int64
 OpCapability Int8
+OpCapability PhysicalStorageBufferAddresses
 OpCapability ShaderClockKHR
 OpCapability Shader
+OpExtension "SPV_KHR_physical_storage_buffer"
 OpExtension "SPV_KHR_shader_clock"
-OpMemoryModel Logical Simple
+OpMemoryModel PhysicalStorageBuffer64 Simple
 OpEntryPoint Fragment %1 "main"
 OpExecutionMode %1 OriginUpperLeft
 %2 = OpString "$OPSTRING_FILENAME/generic-fn-op-name.rs"
