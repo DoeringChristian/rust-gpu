@@ -21,6 +21,9 @@ pub fn main(out: &mut u32) {
     unsafe {
         let x: *mut RuntimeArray<u32> = arch::convert_u_to_ptr(100);
         let y: *mut Struct = arch::convert_u_to_ptr(200);
+
+        let mat = (*y).a;
+
         *out = *(*x).index(0) + (*y).g;
     }
 }
