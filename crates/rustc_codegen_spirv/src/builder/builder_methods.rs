@@ -3,7 +3,9 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
-use rspirv::spirv::{Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word};
+use rspirv::spirv::{
+    Capability, MemoryAccess, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word,
+};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -858,8 +860,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 ty
             )),
         };
+        let align = self.lookup_type(ty).alignof(self.cx).bytes() as _;
         self.emit()
-            .load(ty, None, ptr.def(self), None, empty())
+            .load(
+                ty,
+                None,
+                ptr.def(self),
+                Some(MemoryAccess::ALIGNED),
+                std::iter::once(Operand::LiteralInt32(align)),
+            )
             .unwrap()
             .with_type(ty)
     }
