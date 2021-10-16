@@ -130,11 +130,11 @@ pub fn main() {
         vk::PipelineCache::null(),
         vec![(
             VertexShaderEntryPoint {
-                module: "sky_shader".into(),
+                module: "main_vs".into(),
                 entry_point: "main_vs".into(),
             },
             FragmentShaderEntryPoint {
-                module: "sky_shader".into(),
+                module: "main_fs".into(),
                 entry_point: "main_fs".into(),
             },
         )],
@@ -197,20 +197,21 @@ pub fn main() {
 }
 
 pub fn compile_shaders() -> Vec<SpvFile> {
-    let sky_shader_path =
         SpirvBuilder::new("examples/shaders/sky-shader", "spirv-unknown-vulkan1.1")
             .print_metadata(MetadataPrintout::None)
             .extension("SPV_KHR_non_semantic_info")
+            .multimodule(true)
             .build()
             .unwrap()
             .module
-            .unwrap_single()
-            .to_path_buf();
-    let sky_shader = SpvFile {
-        name: "sky_shader".to_string(),
-        data: read_spv(&mut File::open(sky_shader_path).unwrap()).unwrap(),
-    };
-    vec![sky_shader]
+            .unwrap_multi()
+            .iter()
+            .map(|(name, path)| {
+                SpvFile {
+                    name: name.to_string(),
+                    data: read_spv(&mut File::open(path).unwrap()).unwrap(),
+                }
+            }).collect()
 }
 
 #[derive(Debug)]
