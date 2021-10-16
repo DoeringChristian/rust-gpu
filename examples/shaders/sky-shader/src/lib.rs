@@ -21,8 +21,6 @@ use shared::*;
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
 
-use spirv_std::macros::printfln;
-
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const MIE_COEFFICIENT: f32 = 0.005;
 const MIE_DIRECTIONAL_G: f32 = 0.8;
@@ -178,12 +176,13 @@ pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_
     *builtin_pos = pos.extend(0.0).extend(1.0);
 
     unsafe {
-        printfln!("uv: vec2(%1.2v2f)", uv);
+        spirv_std::macros::printfln!("uv for vert index %i: vec2(%1.2v2f)", vert_idx, uv);
     }
 
     if vert_idx == 0 {
+        // Insert a newline to leave a gap between each draw call.
         unsafe {
-            printfln!();
+            spirv_std::macros::printfln!();
         }
     }
 }
