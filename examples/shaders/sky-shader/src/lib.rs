@@ -4,7 +4,7 @@
     target_arch = "spirv",
     no_std,
     feature(register_attr, lang_items, asm),
-    register_attr(spirv),
+    register_attr(spirv)
 )]
 // HACK(eddyb) can't easily see warnings otherwise from `spirv-builder` builds.
 #![deny(warnings)]
@@ -20,6 +20,8 @@ use shared::*;
 // we tie #[no_std] above to the same condition, so it's fine.
 #[cfg(target_arch = "spirv")]
 use spirv_std::num_traits::Float;
+
+use spirv_std::macros::printfln;
 
 const DEPOLARIZATION_FACTOR: f32 = 0.035;
 const MIE_COEFFICIENT: f32 = 0.005;
@@ -175,16 +177,7 @@ pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_
 
     *builtin_pos = pos.extend(0.0).extend(1.0);
 
-    print_string()
-}
-
-pub fn print_string() {
     unsafe {
-        asm!(
-            "%void = OpTypeVoid",
-            "%string = OpString \"Hello World\"",
-            "%debug_printf = OpExtInstImport \"NonSemantic.DebugPrintf\"",
-            "%result = OpExtInst %void %debug_printf 1 %string",
-        )
+        printfln!("uv: vec2(%1.2v2f)", uv);
     }
 }
