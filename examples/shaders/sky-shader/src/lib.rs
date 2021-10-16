@@ -180,4 +180,10 @@ pub fn main_vs(#[spirv(vertex_index)] vert_idx: i32, #[spirv(position)] builtin_
     unsafe {
         printfln!("uv: vec2(%1.2v2f)", uv);
     }
+
+    if vert_idx == 0 {
+        unsafe {
+            printfln!();
+        }
+    }
 }
