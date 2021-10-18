@@ -130,3 +130,8 @@ extern "C" fn rust_eh_personality() {}
 #[doc(hidden)]
 /// [spirv_types]
 pub fn workaround_rustdoc_ice_84738() {}
+
+#[doc(hidden)]
+pub fn debug_printf_assert_is_type<T>(ty: T) -> T {
+    ty
+}
