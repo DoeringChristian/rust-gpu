@@ -171,7 +171,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
                 // TODO(eddyb) investigate whether this can end up in a pointer
                 // type that's the value of a module-scoped variable, and whether
                 // `Function` is actually invalid! (may need `Private`)
-                concrete_fallback: Operand::StorageClass(StorageClass::Function),
+                concrete_fallback: Operand::StorageClass(StorageClass::PhysicalStorageBuffer),
             },
         );
     }

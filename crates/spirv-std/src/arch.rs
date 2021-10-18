@@ -245,3 +245,15 @@ pub fn signed_min<T: SignedInteger>(a: T, b: T) -> T {
 pub fn signed_max<T: SignedInteger>(a: T, b: T) -> T {
     unsafe { call_glsl_op_with_ints::<_, 42>(a, b) }
 }
+
+/// Convert a u64 device address into a pointer to a buffer.
+#[spirv_std_macros::gpu_only]
+pub unsafe fn convert_u_to_ptr<T>(handle: u64) -> *mut T {
+    let result: *mut T;
+    asm!(
+        "{result} = OpConvertUToPtr typeof{result} {handle}",
+        handle = in(reg) handle,
+        result = out(reg) result,
+    );
+    result
+}

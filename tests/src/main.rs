@@ -302,6 +302,9 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
         // Only needed for `ui/arch/read_clock_khr.rs`.
         "ShaderClockKHR",
         "ext:SPV_KHR_shader_clock",
+        // Only needed for `ui/arch/convert_u_to_ptr.rs`.
+        "PhysicalStorageBufferAddresses",
+        "ext:SPV_KHR_physical_storage_buffer",
     ];
 
     [

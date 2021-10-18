@@ -3,7 +3,9 @@ use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
-use rspirv::spirv::{Capability, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word};
+use rspirv::spirv::{
+    Capability, MemoryAccess, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word,
+};
 use rustc_codegen_ssa::common::{
     AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
 };
@@ -858,8 +860,15 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 ty
             )),
         };
+        let align = self.lookup_type(ty).alignof(self.cx).bytes() as _;
         self.emit()
-            .load(ty, None, ptr.def(self), None, empty())
+            .load(
+                ty,
+                None,
+                ptr.def(self),
+                Some(MemoryAccess::ALIGNED),
+                std::iter::once(Operand::LiteralInt32(align)),
+            )
             .unwrap()
             .with_type(ty)
     }
@@ -1684,7 +1693,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn memcpy(
         &mut self,
         dst: Self::Value,
-        _dst_align: Align,
+        dst_align: Align,
         src: Self::Value,
         _src_align: Align,
         size: Self::Value,
@@ -1710,8 +1719,13 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             if let Some(const_value) = src.const_fold_load(self) {
                 self.store(const_value, dst, Align::from_bytes(0).unwrap());
             } else {
+                let alignment_operands = [
+                    Operand::MemoryAccess(MemoryAccess::ALIGNED),
+                    Operand::LiteralInt32(dst_align.bytes() as u32)
+                ];
+                
                 self.emit()
-                    .copy_memory(dst.def(self), src.def(self), None, None, empty())
+                    .copy_memory(dst.def(self), src.def(self), None, None, alignment_operands)
                     .unwrap();
             }
         } else {
