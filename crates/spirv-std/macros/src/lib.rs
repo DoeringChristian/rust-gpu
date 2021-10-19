@@ -440,7 +440,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         variable_idents.push_str(&format!("%{} ", ident));
 
         input_registers.push(quote::quote! {
-            #ident = in(reg) &{#variable},
+            #ident = in(reg) &spirv_std::debug_printf_assert_is_type::<f32>(#variable),
         });
 
         let op_load = format!("%{ident} = OpLoad _ {{{ident}}}", ident = ident);
