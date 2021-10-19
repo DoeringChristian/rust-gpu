@@ -396,7 +396,8 @@ impl syn::parse::Parse for DebugPrintfInput {
         if !input.is_empty() {
             input.parse::<syn::token::Comma>()?;
         }
-        let variables = syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
+        let variables =
+            syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
 
         Ok(Self {
             span,
@@ -408,7 +409,7 @@ impl syn::parse::Parse for DebugPrintfInput {
 
 fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     let DebugPrintfInput {
-        format_string,
+        mut format_string,
         variables,
         span,
     } = input;
@@ -454,7 +455,11 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
         .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
 
-    let op_string = format!("%string = OpString {:?}", format_string);
+    // Escape any inner quote marks. We can't use something like `String::escape_debug`
+    // as this escapes the newlines too.
+    format_string = format_string.replace('"', r#"\""#);
+
+    let op_string = format!("%string = OpString \"{}\"", format_string);
 
     let output = quote::quote! {
         asm!(
