@@ -356,47 +356,31 @@ fn path_from_ident(ident: Ident) -> syn::Type {
 /// Examples:
 ///
 /// ```rust,ignore
-/// printfln!("uv: %v2f", uv);
-/// printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
+/// debug_printfln!("uv: %v2f", uv);
+/// debug_printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
 /// ```
 ///
 /// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
-pub fn printf(input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as PrintfInput);
-
-    let PrintfInput {
-        format_string,
-        variables,
-        span,
-    } = input;
-
-    printf_inner(format_string, variables, span)
+pub fn debug_printf(input: TokenStream) -> TokenStream {
+    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput))
 }
 
-/// Similar to `printf` but appends a newline to the format string.
+/// Similar to `debug_printf` but appends a newline to the format string.
 #[proc_macro]
-pub fn printfln(input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as PrintfInput);
-
-    let PrintfInput {
-        mut format_string,
-        variables,
-        span,
-    } = input;
-
-    format_string.push_str("\\n");
-
-    printf_inner(format_string, variables, span)
+pub fn debug_printfln(input: TokenStream) -> TokenStream {
+    let mut input = syn::parse_macro_input!(input as DebugPrintfInput);
+    input.format_string.push_str("\\n");
+    debug_printf_inner(input)
 }
 
-struct PrintfInput {
+struct DebugPrintfInput {
     span: proc_macro2::Span,
     format_string: String,
     variables: Vec<syn::Expr>,
 }
 
-impl syn::parse::Parse for PrintfInput {
+impl syn::parse::Parse for DebugPrintfInput {
     fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
         let span = input.span();
 
@@ -408,26 +392,28 @@ impl syn::parse::Parse for PrintfInput {
             });
         }
 
+        let format_string = input.parse::<syn::LitStr>()?;
+        if !input.is_empty() {
+            input.parse::<syn::token::Comma>()?;
+        }
+        let variables =
+            syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
+
         Ok(Self {
             span,
-            format_string: input.parse::<syn::LitStr>()?.value(),
-            variables: {
-                let mut variables = Vec::new();
-                while !input.is_empty() {
-                    input.parse::<syn::Token![,]>()?;
-                    variables.push(input.parse()?);
-                }
-                variables
-            },
+            format_string: format_string.value(),
+            variables: variables.into_iter().collect(),
         })
     }
 }
 
-fn printf_inner(
-    format_string: String,
-    variables: Vec<syn::Expr>,
-    span: proc_macro2::Span,
-) -> TokenStream {
+fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
+    let DebugPrintfInput {
+        mut format_string,
+        variables,
+        span,
+    } = input;
+
     let number_of_arguments =
         format_string.matches('%').count() - format_string.matches("%%").count() * 2;
 
@@ -468,6 +454,10 @@ fn printf_inner(
         .into_iter()
         .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
+
+    // Escape any inner quote marks. We can't use something like `String::escape_debug`
+    // as this escapes the newlines too.
+    format_string = format_string.replace('"', r#"\""#);
 
     let op_string = format!("%string = OpString \"{}\"", format_string);
 
