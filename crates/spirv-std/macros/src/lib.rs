@@ -356,47 +356,31 @@ fn path_from_ident(ident: Ident) -> syn::Type {
 /// Examples:
 ///
 /// ```rust,ignore
-/// printfln!("uv: %v2f", uv);
-/// printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
+/// debug_printfln!("uv: %v2f", uv);
+/// debug_printfln!("pos.x: %f, pos.z: %f, int: %i", pos.x, pos.z, int);
 /// ```
 ///
 /// See <https://github.com/KhronosGroup/Vulkan-ValidationLayers/blob/master/docs/debug_printf.md#debug-printf-format-string> for formatting rules.
 #[proc_macro]
-pub fn printf(input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as PrintfInput);
-
-    let PrintfInput {
-        format_string,
-        variables,
-        span,
-    } = input;
-
-    printf_inner(format_string, variables, span)
+pub fn debug_printf(input: TokenStream) -> TokenStream {
+    debug_printf_inner(syn::parse_macro_input!(input as DebugPrintfInput))
 }
 
-/// Similar to `printf` but appends a newline to the format string.
+/// Similar to `debug_printf` but appends a newline to the format string.
 #[proc_macro]
-pub fn printfln(input: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(input as PrintfInput);
-
-    let PrintfInput {
-        mut format_string,
-        variables,
-        span,
-    } = input;
-
-    format_string.push_str("\\n");
-
-    printf_inner(format_string, variables, span)
+pub fn debug_printfln(input: TokenStream) -> TokenStream {
+    let mut input = syn::parse_macro_input!(input as DebugPrintfInput);
+    input.format_string.push('\n');
+    debug_printf_inner(input)
 }
 
-struct PrintfInput {
+struct DebugPrintfInput {
     span: proc_macro2::Span,
     format_string: String,
     variables: Vec<syn::Expr>,
 }
 
-impl syn::parse::Parse for PrintfInput {
+impl syn::parse::Parse for DebugPrintfInput {
     fn parse(input: syn::parse::ParseStream<'_>) -> syn::parse::Result<Self> {
         let span = input.span();
 
@@ -408,34 +392,47 @@ impl syn::parse::Parse for PrintfInput {
             });
         }
 
+        let format_string = input.parse::<syn::LitStr>()?;
+        if !input.is_empty() {
+            input.parse::<syn::token::Comma>()?;
+        }
+        let variables =
+            syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::parse_terminated(input)?;
+
         Ok(Self {
             span,
-            format_string: input.parse::<syn::LitStr>()?.value(),
-            variables: {
-                let mut variables = Vec::new();
-                while !input.is_empty() {
-                    input.parse::<syn::Token![,]>()?;
-                    variables.push(input.parse()?);
-                }
-                variables
-            },
+            format_string: format_string.value(),
+            variables: variables.into_iter().collect(),
         })
     }
 }
 
-fn printf_inner(
-    format_string: String,
-    variables: Vec<syn::Expr>,
-    span: proc_macro2::Span,
-) -> TokenStream {
-    let number_of_arguments =
-        format_string.matches('%').count() - format_string.matches("%%").count() * 2;
+fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
+    let DebugPrintfInput {
+        format_string,
+        variables,
+        span,
+    } = input;
+
+    let specifiers = "d|i|o|u|x|X|a|A|e|E|f|F|g|G|ul|lu|lx";
+
+    let regex = regex::Regex::new(&format!(
+        r"(%+)\d*\.?\d*(v(2|3|4)({specifiers})|{specifiers})",
+        specifiers = specifiers
+    ))
+    .unwrap();
+
+    let number_of_arguments = regex
+        .captures_iter(&format_string)
+        // Filter out captures with an even number of `%`s, as pairs of them are escaped.
+        .filter(|captures| captures[1].len() % 2 == 1)
+        .count();
 
     if number_of_arguments != variables.len() {
         return syn::Error::new(
             span,
             &format!(
-                "{} % arguments were found, but {} variables were given",
+                "{} valid % arguments were found, but {} variables were given",
                 number_of_arguments,
                 variables.len()
             ),
@@ -444,17 +441,43 @@ fn printf_inner(
         .into();
     }
 
+    fn map_specifier_to_type(specifier: &str) -> proc_macro2::TokenStream {
+        match specifier {
+            "d" | "i" => quote::quote! { i32 },
+            "o" | "u" | "x" | "X" => quote::quote! { u32 },
+            "a" | "A" | "e" | "E" | "f" | "F" | "g" | "G" => quote::quote! { f32 },
+            "ul" | "lu" | "lx" => quote::quote! { u64 },
+            _ => unreachable!(),
+        }
+    }
+
+    let assert_fns = regex
+        .captures_iter(&format_string)
+        .filter(|captures| captures[1].len() % 2 == 1)
+        .map(|captures| {
+            let specifier = &captures[2][0..1];
+
+            if specifier == "v" {
+                let count = &captures[3].parse::<usize>().unwrap();
+                let ty = map_specifier_to_type(&captures[4][0..1]);
+                quote::quote! { spirv_std::debug_printf_assert_is_vector::<#ty, _, #count> }
+            } else {
+                let ty = map_specifier_to_type(specifier);
+                quote::quote! { spirv_std::debug_printf_assert_is_type::<#ty> }
+            }
+        });
+
     let mut variable_idents = String::new();
     let mut input_registers = Vec::new();
     let mut op_loads = Vec::new();
 
-    for (i, variable) in variables.into_iter().enumerate() {
+    for (i, (variable, assert_fn)) in variables.into_iter().zip(assert_fns).enumerate() {
         let ident = quote::format_ident!("_{}", i);
 
         variable_idents.push_str(&format!("%{} ", ident));
 
         input_registers.push(quote::quote! {
-            #ident = in(reg) &{#variable},
+            #ident = in(reg) &#assert_fn(#variable),
         });
 
         let op_load = format!("%{ident} = OpLoad _ {{{ident}}}", ident = ident);
@@ -469,7 +492,7 @@ fn printf_inner(
         .collect::<proc_macro2::TokenStream>();
     let op_loads = op_loads.into_iter().collect::<proc_macro2::TokenStream>();
 
-    let op_string = format!("%string = OpString \"{}\"", format_string);
+    let op_string = format!("%string = OpString {:?}", format_string);
 
     let output = quote::quote! {
         asm!(
