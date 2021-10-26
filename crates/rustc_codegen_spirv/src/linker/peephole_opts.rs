@@ -1,6 +1,6 @@
 use rspirv::dr::{Function, Instruction, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, Word};
-use rustc_data_structures::fx::FxHashMap;
+use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_middle::bug;
 
 pub fn collect_types(module: &Module) -> FxHashMap<Word, Instruction> {
@@ -445,5 +445,54 @@ pub fn vector_ops(
 
             instruction_index += 1;
         }
+    }
+}
+
+pub fn remove_sampled_image_op_stores(func: &mut Function) {
+    let sampled_image_ids: FxHashSet<Word> = func.blocks.iter().flat_map(|block| &block.instructions)
+        .filter_map(|instruction| {
+            if instruction.class.opcode == Op::SampledImage {
+                Some(instruction.result_id?)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    let mut rewritten_ids: FxHashMap<Word, Word> = FxHashMap::default();
+
+    for block in &mut func.blocks {
+        for instruction in &mut block.instructions {
+            for operand in &mut instruction.operands {
+                let id = match operand {
+                    Operand::IdRef(id) => id,
+                    _ => continue,
+                };
+
+                if let Some(rewritten) = rewritten_ids.get(&id) {
+                    *operand = Operand::IdRef(*rewritten);
+                }
+            }
+
+            if instruction.class.opcode != Op::Store {
+                continue;
+            }
+
+            let dst_ty = match instruction.operands[0] {
+                Operand::IdRef(id) => id,
+                _ => continue,
+            };
+            let src_ty = match instruction.operands[1] {
+                Operand::IdRef(id) => id,
+                _ => continue,
+            };
+            if sampled_image_ids.contains(&src_ty) {
+                rewritten_ids.insert(dst_ty, src_ty);
+                *instruction = Instruction::new(Op::Nop, None, None, vec![]);
+            }
+        }
+
+        // Delete the nops we inserted
+        block.instructions.retain(|instruction| instruction.class.opcode != Op::Nop);
     }
 }

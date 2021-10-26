@@ -16,5 +16,21 @@ pub fn main(
     let r1: glam::Vec4 = image2d.sample(*sampler, v2);
     let r2: glam::Vec4 = image2d_array.sample(*sampler, v3);
     let r3: glam::Vec4 = cubemap.sample(*sampler, v3);
-    *output = r1 + r2 + r3;
+    let r4: glam::Vec4 = unsafe { image2d.combine(*sampler).sample(v2) };
+
+    let combined = unsafe { image2d_array.combine(*sampler) };
+
+    let r5: glam::Vec4 = unsafe { combined.sample(v3) };
+    let r6: glam::Vec4 = unsafe { combined.sample(v3 + glam::Vec3::splat(0.01)) };
+
+    let mut sum = glam::Vec4::ZERO;
+
+    /*
+    for _ in 0 .. 3 {
+        let sample: glam::Vec4 = unsafe { combined.sample(v3) };
+        sum += sample;
+    }
+    */
+
+    *output = r1 + r2 + r3 + r4 + r5 + r6 + sum;
 }

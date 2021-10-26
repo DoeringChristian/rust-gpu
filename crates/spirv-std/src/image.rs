@@ -118,6 +118,21 @@ impl<
         const SAMPLED: u32,
     > Image<SampledType, DIM, DEPTH, ARRAYED, { Multisampled::False as u32 }, SAMPLED, FORMAT>
 {
+    #[crate::macros::gpu_only]
+    #[inline]
+    pub unsafe fn combine(&self, sampler: Sampler) -> SampledImage<Self> {
+        asm! {
+            "%typeSampledImage = OpTypeSampledImage typeof*{this}",
+            "%image = OpLoad _ {this}",
+            "%sampler = OpLoad _ {sampler}",
+            "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
+            "OpReturnValue %sampledImage",
+            this = in(reg) self,
+            sampler = in(reg) &sampler,
+            options(noreturn),
+        }
+    }
+
     // Note: #[inline] is needed because in vulkan, the component must be a constant expression.
     /// Gathers the requested component from four texels.
     #[crate::macros::gpu_only]
@@ -162,21 +177,7 @@ impl<
         V: Vector<SampledType, 4>,
     {
         unsafe {
-            let mut result = Default::default();
-            asm!(
-                "%typeSampledImage = OpTypeSampledImage typeof*{1}",
-                "%image = OpLoad typeof*{1} {1}",
-                "%sampler = OpLoad typeof*{2} {2}",
-                "%coord = OpLoad typeof*{3} {3}",
-                "%sampledImage = OpSampledImage %typeSampledImage %image %sampler",
-                "%result = OpImageSampleImplicitLod typeof*{0} %sampledImage %coord",
-                "OpStore {0} %result",
-                in(reg) &mut result,
-                in(reg) self,
-                in(reg) &sampler,
-                in(reg) &coord
-            );
-            result
+            self.combine(sampler).sample(coord)
         }
     }
 
@@ -227,24 +228,9 @@ impl<
         F: Float,
         V: Vector<SampledType, 4>,
     {
-        let mut result = Default::default();
         unsafe {
-            asm!(
-                "%image = OpLoad _ {this}",
-                "%sampler = OpLoad _ {sampler}",
-                "%coordinate = OpLoad _ {coordinate}",
-                "%lod = OpLoad _ {lod}",
-                "%sampledImage = OpSampledImage _ %image %sampler",
-                "%result = OpImageSampleExplicitLod _ %sampledImage %coordinate Lod %lod",
-                "OpStore {result} %result",
-                result = in(reg) &mut result,
-                this = in(reg) self,
-                sampler = in(reg) &sampler,
-                coordinate = in(reg) &coordinate,
-                lod = in(reg) &lod
-            );
+            self.combine(sampler).sample_by_lod(coordinate, lod)
         }
-        result
     }
 
     #[crate::macros::gpu_only]
@@ -957,6 +943,7 @@ impl<
     /// Sampling with a type (`S`) that doesn't match the image's image format
     /// will result in undefined behaviour.
     #[crate::macros::gpu_only]
+    #[inline]
     pub unsafe fn sample<F, V>(&self, coord: impl ImageCoordinate<F, DIM, ARRAYED>) -> V
     where
         F: Float,
@@ -981,6 +968,7 @@ impl<
     /// Sampling with a type (`S`) that doesn't match the image's image format
     /// will result in undefined behaviour.
     #[crate::macros::gpu_only]
+    #[inline]
     pub unsafe fn sample_by_lod<F, V>(
         &self,
         coord: impl ImageCoordinate<F, DIM, ARRAYED>,
