@@ -16,6 +16,7 @@ use rustc_hir::LlvmInlineAsmInner;
 use rustc_middle::bug;
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::asm::{InlineAsmRegClass, InlineAsmRegOrRegClass, SpirVInlineAsmRegClass};
+use std::convert::TryFrom;
 
 pub struct InstructionTable {
     table: FxHashMap<&'static str, &'static rspirv::grammar::Instruction<'static>>,
@@ -698,13 +699,25 @@ impl<'cx, 'tcx> Builder<'cx, 'tcx> {
 
                 TyPat::IndexComposite(pat) => {
                     let mut ty = subst_ty_pat(cx, pat, ty_vars, leftover_operands)?;
-                    for _index in leftover_operands {
-                        // FIXME(eddyb) support more than just arrays, by looking
-                        // up the indices (of struct fields) as constant integers.
+                    for index in leftover_operands {
+                        let index_to_usize = || match *index {
+                            // FIXME(eddyb) support more than just literals,
+                            // by looking up `IdRef`s as constant integers.
+                            dr::Operand::LiteralInt32(i) => {
+                                usize::try_from(i).map_err(|_| Ambiguous)
+                            }
+
+                            _ => Err(Ambiguous),
+                        };
                         ty = match cx.lookup_type(ty) {
                             SpirvType::Array { element, .. }
                             | SpirvType::RuntimeArray { element } => element,
 
+                            SpirvType::Adt { field_types, .. } => {
+                                *field_types.get(index_to_usize()?).ok_or(Ambiguous)?
+                            }
+
+                            // FIXME(eddyb) support more than just arrays and structs.
                             _ => return Err(Ambiguous),
                         };
                     }
