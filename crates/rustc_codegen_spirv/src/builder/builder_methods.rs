@@ -2228,6 +2228,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 kind: SpirvValueKind::IllegalTypeUsed(void_ty),
                 ty: void_ty,
             }
+        } else if self
+            .decorate_non_uniform_intrinsic_fn_id
+            .borrow()
+            .contains(&callee_val)
+        {
+            self.codegen_decorate_non_uniform_intrinsic(result_type, args)
         } else {
             let args = args.iter().map(|arg| arg.def(self)).collect::<Vec<_>>();
             self.emit()
@@ -2243,5 +2249,33 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
 
     fn do_not_inline(&mut self, _llret: Self::Value) {
         // Ignore
+    }
+}
+
+impl<'a, 'tcx> Builder<'a, 'tcx> {
+    fn codegen_decorate_non_uniform_intrinsic(&mut self, result_type: Word,
+        args: &[SpirvValue]) -> SpirvValue {
+
+        use rspirv::spirv::{Decoration};
+
+        if args.len() != 1 {
+            self.fatal(&format!(
+                "decorate_non_uniform_intrinsic should have 1 arg, it has {}",
+                args.len()
+            ));
+        }
+
+        let arg = args[0];
+
+        dbg!(arg);
+
+        let id = match arg.kind {
+            SpirvValueKind::Def(id) => id,
+            _ => panic!()
+        };
+
+        self.emit_global().decorate(id, Decoration::NonUniform, iter::empty());
+
+        arg
     }
 }

@@ -70,6 +70,8 @@ pub struct CodegenCx<'tcx> {
     pub buffer_load_intrinsic_fn_id: RefCell<FxHashSet<Word>>,
     /// Intrinsic for storing a <T> into a &[u32]
     pub buffer_store_intrinsic_fn_id: RefCell<FxHashSet<Word>>,
+    /// Intrinsic for decorating a <T> with NonUniform.
+    pub decorate_non_uniform_intrinsic_fn_id: RefCell<FxHashSet<Word>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
@@ -129,6 +131,7 @@ impl<'tcx> CodegenCx<'tcx> {
             panic_fn_id: Default::default(),
             buffer_load_intrinsic_fn_id: Default::default(),
             buffer_store_intrinsic_fn_id: Default::default(),
+            decorate_non_uniform_intrinsic_fn_id: Default::default(),
             panic_bounds_check_fn_id: Default::default(),
             i8_i16_atomics_allowed: false,
             codegen_args,

@@ -344,6 +344,10 @@ impl Symbols {
                 "buffer_store_intrinsic",
                 SpirvAttribute::BufferStoreIntrinsic,
             ),
+            (
+                "decorate_non_uniform_intrinsic",
+                SpirvAttribute::DecorateNonUniformIntrinsic
+            )
         ]
         .iter()
         .cloned();

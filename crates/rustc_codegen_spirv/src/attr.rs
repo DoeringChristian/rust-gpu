@@ -92,6 +92,7 @@ pub enum SpirvAttribute {
     UnrollLoops,
     BufferLoadIntrinsic,
     BufferStoreIntrinsic,
+    DecorateNonUniformIntrinsic,
 }
 
 // HACK(eddyb) this is similar to `rustc_span::Spanned` but with `value` as the
@@ -127,6 +128,7 @@ pub struct AggregatedSpirvAttributes {
     pub unroll_loops: Option<Spanned<()>>,
     pub buffer_load_intrinsic: Option<Spanned<()>>,
     pub buffer_store_intrinsic: Option<Spanned<()>>,
+    pub decorate_non_uniform_intrinsic: Option<Spanned<()>>,
 }
 
 struct MultipleAttrs {
@@ -226,6 +228,12 @@ impl AggregatedSpirvAttributes {
                 span,
                 "#[spirv(buffer_store_intrinsic)]",
             ),
+            DecorateNonUniformIntrinsic => try_insert(
+                &mut self.decorate_non_uniform_intrinsic,
+                (),
+                span,
+                "#[spirv(decorate_non_uniform_intrinsic)]",
+            )
         }
     }
 }
@@ -356,7 +364,7 @@ impl CheckSpirvAttrVisitor<'_> {
 
                     _ => Err(Expected("function or closure")),
                 },
-                SpirvAttribute::BufferLoadIntrinsic | SpirvAttribute::BufferStoreIntrinsic => {
+                SpirvAttribute::BufferLoadIntrinsic | SpirvAttribute::BufferStoreIntrinsic | SpirvAttribute::DecorateNonUniformIntrinsic => {
                     match target {
                         Target::Fn => Ok(()),
                         _ => Err(Expected("function")),
