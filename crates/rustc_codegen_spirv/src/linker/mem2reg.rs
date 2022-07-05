@@ -319,7 +319,6 @@ fn split_copy_memory(
                 let mut operands = vec![];
                 if inst.operands.len() > 2 {
                     // TODO: Copy the memory operands to the load/store
-                    //bug!("mem2reg OpCopyMemory doesn't support memory operands yet");
                     operands.extend_from_slice(&inst.operands[2..]);
                 }
                 let ty = match (var_map.get(&target), var_map.get(&source)) {
@@ -339,6 +338,7 @@ fn split_copy_memory(
                 let mut load_operands = vec![Operand::IdRef(source)];
                 load_operands.extend_from_slice(&operands);
                 let mut store_operands = vec![Operand::IdRef(target), Operand::IdRef(temp_id)];
+                store_operands.extend_from_slice(&operands);
 
                 block.instructions[inst_index] =
                     Instruction::new(Op::Load, Some(ty), Some(temp_id), load_operands);
