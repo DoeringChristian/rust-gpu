@@ -369,7 +369,9 @@ impl SpirvType {
             Self::Void | Self::Function { .. } => Align::from_bytes(0).unwrap(),
 
             Self::Bool => Align::from_bytes(1).unwrap(),
-            Self::Integer(width, _) | Self::Float(width) => Align::from_bits(width as u64).unwrap(),
+            Self::Integer(width, _) | Self::Float(width) => {
+                Align::from_bits(width as u64).unwrap_or(Align::from_bits(8).unwrap())
+            }
             Self::Adt { align, .. } => align,
             // Vectors have size==align
             Self::Vector { .. } => Align::from_bytes(
