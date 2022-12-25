@@ -19,7 +19,7 @@ impl<'tcx> LayoutOfHelpers<'tcx> for CodegenCx<'tcx> {
     #[inline]
     fn handle_layout_err(&self, err: LayoutError<'tcx>, span: Span, ty: Ty<'tcx>) -> ! {
         if let LayoutError::SizeOverflow(_) = err {
-            self.tcx.sess.span_fatal(span, &err.to_string())
+            self.tcx.sess.span_fatal(span, err.to_string())
         } else {
             span_bug!(span, "failed to get layout for `{}`: {}", ty, err)
         }
@@ -37,7 +37,7 @@ impl<'tcx> FnAbiOfHelpers<'tcx> for CodegenCx<'tcx> {
         fn_abi_request: FnAbiRequest<'tcx>,
     ) -> ! {
         if let FnAbiError::Layout(LayoutError::SizeOverflow(_)) = err {
-            self.tcx.sess.span_fatal(span, &err.to_string())
+            self.tcx.sess.span_fatal(span, err.to_string())
         } else {
             match fn_abi_request {
                 FnAbiRequest::OfFnPtr { sig, extra_args } => {
@@ -180,18 +180,19 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn type_func(&self, args: &[Self::Type], ret: Self::Type) -> Self::Type {
         SpirvType::Function {
             return_type: ret,
-            arguments: args.to_vec(),
+            arguments: args,
         }
         .def(DUMMY_SP, self)
     }
     fn type_struct(&self, els: &[Self::Type], _packed: bool) -> Self::Type {
+        // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
         let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, els);
         SpirvType::Adt {
             def_id: None,
             align,
             size,
-            field_types: els.to_vec(),
-            field_offsets,
+            field_types: els,
+            field_offsets: &field_offsets,
             field_names: None,
         }
         .def(DUMMY_SP, self)
@@ -208,7 +209,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
                 other => self
                     .tcx
                     .sess
-                    .fatal(&format!("Invalid float width in type_kind: {}", other)),
+                    .fatal(format!("Invalid float width in type_kind: {}", other)),
             },
             SpirvType::Adt { .. } | SpirvType::InterfaceBlock { .. } => {
                 TypeKind::Struct
@@ -237,7 +238,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
         match self.lookup_type(ty) {
             SpirvType::Pointer { pointee } => pointee,
             SpirvType::Vector { element, .. } => element,
-            spirv_type => self.tcx.sess.fatal(&format!(
+            spirv_type => self.tcx.sess.fatal(format!(
                 "element_type called on invalid type: {:?}",
                 spirv_type
             )),
@@ -248,10 +249,10 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
     fn vector_length(&self, ty: Self::Type) -> usize {
         match self.lookup_type(ty) {
             SpirvType::Vector { count, .. } => count as usize,
-            ty => self.tcx.sess.fatal(&format!(
-                "vector_length called on non-vector type: {:?}",
-                ty
-            )),
+            ty => self
+                .tcx
+                .sess
+                .fatal(format!("vector_length called on non-vector type: {:?}", ty)),
         }
     }
 
@@ -261,7 +262,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(&format!("float_width called on non-float type: {:?}", ty)),
+                .fatal(format!("float_width called on non-float type: {:?}", ty)),
         }
     }
 
@@ -272,7 +273,7 @@ impl<'tcx> BaseTypeMethods<'tcx> for CodegenCx<'tcx> {
             ty => self
                 .tcx
                 .sess
-                .fatal(&format!("int_width called on non-integer type: {:?}", ty)),
+                .fatal(format!("int_width called on non-integer type: {:?}", ty)),
         }
     }
 

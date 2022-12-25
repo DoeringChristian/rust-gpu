@@ -3,7 +3,7 @@
 
 // build-fail
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(sampler, sampler)]
 struct _SameIntrinsicType {}
@@ -51,6 +51,3 @@ fn _entry(
     #[spirv(invariant, invariant)] _invariant: (),
 ) {
 }
-
-#[spirv(unroll_loops, unroll_loops)]
-fn _unroll_loops() {}

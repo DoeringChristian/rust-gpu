@@ -1,12 +1,14 @@
+// normalize-stderr-not_spirt "OpLine %8 32 1" -> "OpNoLine"
+
 // revisions: normal via_intrinsic
-// [normal] build-fail
+//[normal] build-fail
 // normalize-stderr-test "\S*/library/core/src/" -> "$$CORE_SRC/"
-// [via_intrinsic] build-pass
+//[via_intrinsic] build-pass
 // compile-flags: -C llvm-args=--disassemble-fn=ptr_copy::copy_via_raw_ptr
 
 #![cfg_attr(via_intrinsic, feature(intrinsics))]
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn copy_via_raw_ptr(src: &f32, dst: &mut f32) {
     #[cfg(via_intrinsic)]

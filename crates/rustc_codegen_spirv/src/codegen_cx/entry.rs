@@ -1,6 +1,6 @@
 use super::CodegenCx;
 use crate::abi::ConvSpirvType;
-use crate::attr::{AggregatedSpirvAttributes, Entry};
+use crate::attr::{AggregatedSpirvAttributes, Entry, Spanned};
 use crate::builder::Builder;
 use crate::builder_spirv::{SpirvValue, SpirvValueExt};
 use crate::spirv_type::SpirvType;
@@ -38,11 +38,13 @@ impl<'tcx> CodegenCx<'tcx> {
             } else {
                 self.tcx
                     .sess
-                    .span_err(span, &format!("Cannot declare {} as an entry point", name));
+                    .span_err(span, format!("Cannot declare {} as an entry point", name));
                 return;
             };
-            let fn_hir_id = self.tcx.hir().local_def_id_to_hir_id(fn_local_def_id);
-            let body = self.tcx.hir().body(self.tcx.hir().body_owned_by(fn_hir_id));
+            let body = self
+                .tcx
+                .hir()
+                .body(self.tcx.hir().body_owned_by(fn_local_def_id));
             body.params
         };
         for (arg_abi, hir_param) in fn_abi.args.iter().zip(hir_params) {
@@ -55,7 +57,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     if !matches!(arg_abi.layout.ty.kind(), ty::Ref(..)) {
                         self.tcx.sess.span_err(
                             hir_param.ty_span,
-                            &format!(
+                            format!(
                                 "entry point parameter type not yet supported \
                                  (`{}` has `ScalarPair` ABI but is not a `&T`)",
                                 arg_abi.layout.ty
@@ -67,7 +69,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 // is any validation concern, it should be done on the types.
                 PassMode::Ignore => self.tcx.sess.span_fatal(
                     hir_param.ty_span,
-                    &format!(
+                    format!(
                         "entry point parameter type not yet supported \
                         (`{}` has size `0`)",
                         arg_abi.layout.ty
@@ -85,7 +87,7 @@ impl<'tcx> CodegenCx<'tcx> {
         } else {
             self.tcx.sess.span_err(
                 span,
-                &format!(
+                format!(
                     "entry point should return `()`, not `{}`",
                     fn_abi.ret.layout.ty
                 ),
@@ -96,7 +98,7 @@ impl<'tcx> CodegenCx<'tcx> {
         let fn_id = self.shader_entry_stub(
             span,
             entry_func,
-            &fn_abi.args,
+            fn_abi,
             hir_params,
             name,
             entry.execution_model,
@@ -114,7 +116,7 @@ impl<'tcx> CodegenCx<'tcx> {
         &self,
         span: Span,
         entry_func: SpirvValue,
-        arg_abis: &[ArgAbi<'tcx, Ty<'tcx>>],
+        entry_fn_abi: &FnAbi<'tcx, Ty<'tcx>>,
         hir_params: &[hir::Param<'tcx>],
         name: String,
         execution_model: ExecutionModel,
@@ -123,7 +125,7 @@ impl<'tcx> CodegenCx<'tcx> {
             let void = SpirvType::Void.def(span, self);
             let fn_void_void = SpirvType::Function {
                 return_type: void,
-                arguments: vec![],
+                arguments: &[],
             }
             .def(span, self);
             let mut emit = self.emit_global();
@@ -139,9 +141,10 @@ impl<'tcx> CodegenCx<'tcx> {
         let mut bx = Builder::build(self, Builder::append_block(self, stub_fn, ""));
         let mut call_args = vec![];
         let mut decoration_locations = FxHashMap::default();
-        for (entry_arg_abi, hir_param) in arg_abis.iter().zip(hir_params) {
+        for (entry_arg_abi, hir_param) in entry_fn_abi.args.iter().zip(hir_params) {
             bx.set_span(hir_param.span);
             self.declare_shader_interface_for_param(
+                execution_model,
                 entry_arg_abi,
                 hir_param,
                 &mut op_entry_point_interface_operands,
@@ -151,7 +154,13 @@ impl<'tcx> CodegenCx<'tcx> {
             );
         }
         bx.set_span(span);
-        bx.call(entry_func.ty, entry_func, &call_args, None);
+        bx.call(
+            entry_func.ty,
+            Some(entry_fn_abi),
+            entry_func,
+            &call_args,
+            None,
+        );
         bx.ret_void();
 
         let stub_fn_id = stub_fn.def_cx(self);
@@ -197,7 +206,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 } else {
                     self.tcx.sess.span_err(
                         hir_param.ty_span,
-                        &format!(
+                        format!(
                             "entry parameter type must be by-reference: `&{}`",
                             layout.ty,
                         ),
@@ -223,7 +232,7 @@ impl<'tcx> CodegenCx<'tcx> {
             if !is_ref {
                 self.tcx.sess.span_fatal(
                     hir_param.ty_span,
-                    &format!(
+                    format!(
                         "invalid entry param type `{}` for storage class `{:?}` \
                          (expected `&{}T`)",
                         layout.ty,
@@ -272,7 +281,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 (true, hir::Mutability::Mut) => StorageClass::Output,
                 (true, hir::Mutability::Not) => self.tcx.sess.span_fatal(
                     hir_param.ty_span,
-                    &format!(
+                    format!(
                         "invalid entry param type `{}` (expected `{}` or `&mut {1}`)",
                         layout.ty, value_ty
                     ),
@@ -282,8 +291,10 @@ impl<'tcx> CodegenCx<'tcx> {
         (spirv_ty, storage_class)
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn declare_shader_interface_for_param(
         &self,
+        execution_model: ExecutionModel,
         entry_arg_abi: &ArgAbi<'tcx, Ty<'tcx>>,
         hir_param: &hir::Param<'tcx>,
         op_entry_point_interface_operands: &mut Vec<Word>,
@@ -393,7 +404,7 @@ impl<'tcx> CodegenCx<'tcx> {
                 if is_unsized {
                     self.tcx.sess.span_fatal(
                         hir_param.ty_span,
-                        &format!(
+                        format!(
                             "unsized types are not supported for storage class {:?}",
                             storage_class
                         ),
@@ -520,11 +531,12 @@ impl<'tcx> CodegenCx<'tcx> {
         }
 
         self.check_for_bad_types(
+            execution_model,
             hir_param.ty_span,
             var_ptr_spirv_type,
             storage_class,
             attrs.builtin.is_some(),
-            attrs.flat.is_some(),
+            attrs.flat,
         );
 
         // Assign locations from left to right, incrementing each storage class
@@ -566,51 +578,101 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     // Booleans are only allowed in some storage classes. Error if they're in others.
-    // Integers and f64s must be decorated with `#[spirv(flat)]`.
+    // Integers and `f64`s must be decorated with `#[spirv(flat)]`.
     fn check_for_bad_types(
         &self,
+        execution_model: ExecutionModel,
         span: Span,
         ty: Word,
         storage_class: StorageClass,
         is_builtin: bool,
-        is_flat: bool,
+        flat_attr: Option<Spanned<()>>,
     ) {
         // private and function are allowed here, but they can't happen.
+        if matches!(
+            storage_class,
+            StorageClass::Workgroup | StorageClass::CrossWorkgroup
+        ) {
+            return;
+        }
+
+        let mut has_bool = false;
+        let mut type_must_be_flat = false;
+        recurse(self, ty, &mut has_bool, &mut type_must_be_flat);
+
         // SPIR-V technically allows all input/output variables to be booleans, not just builtins,
         // but has a note:
         // > Khronos Issue #363: OpTypeBool can be used in the Input and Output storage classes,
         //   but the client APIs still only allow built-in Boolean variables (e.g. FrontFacing),
         //   not user variables.
         // spirv-val disallows non-builtin inputs/outputs, so we do too, I guess.
-        if matches!(
-            storage_class,
-            StorageClass::Workgroup | StorageClass::CrossWorkgroup
-        ) || is_builtin && matches!(storage_class, StorageClass::Input | StorageClass::Output)
-        {
-            return;
-        }
-        let mut has_bool = false;
-        let mut must_be_flat = false;
-        recurse(self, ty, &mut has_bool, &mut must_be_flat);
-        if has_bool {
-            self.tcx
-                .sess
-                .span_err(span, "entrypoint parameter cannot contain a boolean");
-        }
-        if matches!(storage_class, StorageClass::Input | StorageClass::Output)
-            && must_be_flat
-            && !is_flat
+        if has_bool
+            && !(is_builtin && matches!(storage_class, StorageClass::Input | StorageClass::Output))
         {
             self.tcx
                 .sess
-                .span_err(span, "parameter must be decorated with #[spirv(flat)]");
+                .span_err(span, "entry-point parameter cannot contain `bool`s");
         }
+
+        // Enforce Vulkan validation rules around `Flat` as accurately as possible,
+        // i.e. "interpolation control" can only be used "within" the rasterization
+        // pipeline (roughly: `vertex (outputs) -> ... -> (inputs for) fragment`),
+        // but not at the "outer" interface (vertex inputs/fragment outputs).
+        // Also, fragment inputs *require* it for some ("uninterpolatable") types.
+        // FIXME(eddyb) maybe this kind of `enum` could be placed elsewhere?
+        enum Force {
+            Disallow,
+            Require,
+        }
+        #[allow(clippy::match_same_arms)]
+        let flat_forced = match (execution_model, storage_class) {
+            // VUID-StandaloneSpirv-Flat-06202
+            // > The `Flat`, `NoPerspective`, `Sample`, and `Centroid` decorations **must**
+            // > not be used on variables with the `Input` storage class in a vertex shader
+            (ExecutionModel::Vertex, StorageClass::Input) => Some(Force::Disallow),
+
+            // VUID-StandaloneSpirv-Flat-04744
+            // > Any variable with integer or double-precision floating-point type and
+            // > with `Input` storage class in a fragment shader, **must** be decorated `Flat`
+            (ExecutionModel::Fragment, StorageClass::Input) if type_must_be_flat => {
+                // FIXME(eddyb) shouldn't this be automatic then? (maybe with a warning?)
+                Some(Force::Require)
+            }
+
+            // VUID-StandaloneSpirv-Flat-06201
+            // > The `Flat`, `NoPerspective`, `Sample`, and `Centroid` decorations **must**
+            // > not be used on variables with the `Output` storage class in a fragment shader
+            (ExecutionModel::Fragment, StorageClass::Output) => Some(Force::Disallow),
+
+            // VUID-StandaloneSpirv-Flat-04670
+            // > The `Flat`, `NoPerspective`, `Sample`, and `Centroid` decorations **must**
+            // > only be used on variables with the `Output` or `Input` storage class
+            (_, StorageClass::Input | StorageClass::Output) => None,
+            _ => Some(Force::Disallow),
+        };
+
+        let flat_mismatch = match (flat_forced, flat_attr) {
+            (Some(Force::Disallow), Some(flat_attr)) => Some((flat_attr.span, "cannot")),
+            // FIXME(eddyb) it would be useful to show the type that required it.
+            (Some(Force::Require), None) => Some((span, "must")),
+            _ => None,
+        };
+        if let Some((span, must_or_cannot)) = flat_mismatch {
+            self.tcx.sess.span_err(
+                span,
+                format!(
+                    "`{execution_model:?}` entry-point `{storage_class:?}` parameter \
+                     {must_or_cannot} be decorated with `#[spirv(flat)]`"
+                ),
+            );
+        }
+
         fn recurse(cx: &CodegenCx<'_>, ty: Word, has_bool: &mut bool, must_be_flat: &mut bool) {
             match cx.lookup_type(ty) {
                 SpirvType::Bool => *has_bool = true,
                 SpirvType::Integer(_, _) | SpirvType::Float(64) => *must_be_flat = true,
                 SpirvType::Adt { field_types, .. } => {
-                    for f in field_types {
+                    for &f in field_types {
                         recurse(cx, f, has_bool, must_be_flat);
                     }
                 }
@@ -627,7 +689,7 @@ impl<'tcx> CodegenCx<'tcx> {
                     arguments,
                 } => {
                     recurse(cx, return_type, has_bool, must_be_flat);
-                    for a in arguments {
+                    for &a in arguments {
                         recurse(cx, a, has_bool, must_be_flat);
                     }
                 }

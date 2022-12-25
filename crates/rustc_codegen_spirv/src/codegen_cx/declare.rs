@@ -10,7 +10,7 @@ use rustc_middle::bug;
 use rustc_middle::middle::codegen_fn_attrs::{CodegenFnAttrFlags, CodegenFnAttrs};
 use rustc_middle::mir::mono::{Linkage, MonoItem, Visibility};
 use rustc_middle::ty::layout::{FnAbiOf, LayoutOf};
-use rustc_middle::ty::{self, Instance, ParamEnv, TypeFoldable};
+use rustc_middle::ty::{self, Instance, ParamEnv, TypeVisitable};
 use rustc_span::def_id::DefId;
 use rustc_span::Span;
 use rustc_target::abi::Align;
@@ -108,7 +108,8 @@ impl<'tcx> CodegenCx<'tcx> {
 
         let declared = fn_id.with_type(function_type);
 
-        let attrs = AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs(instance.def_id()));
+        let attrs =
+            AggregatedSpirvAttributes::parse(self, self.tcx.get_attrs_unchecked(instance.def_id()));
         if let Some(entry) = attrs.entry.map(|attr| attr.value) {
             let entry_name = entry
                 .name
@@ -116,17 +117,14 @@ impl<'tcx> CodegenCx<'tcx> {
                 .map_or_else(|| instance.to_string(), ToString::to_string);
             self.entry_stub(&instance, fn_abi, declared, entry_name, entry);
         }
-        if attrs.unroll_loops.is_some() {
-            self.unroll_loops_decorations.borrow_mut().insert(fn_id);
-        }
         if attrs.buffer_load_intrinsic.is_some() {
-            let mode = fn_abi.ret.mode;
+            let mode = &fn_abi.ret.mode;
             self.buffer_load_intrinsic_fn_id
                 .borrow_mut()
                 .insert(fn_id, mode);
         }
         if attrs.buffer_store_intrinsic.is_some() {
-            let mode = fn_abi.args.last().unwrap().mode;
+            let mode = &fn_abi.args.last().unwrap().mode;
             self.buffer_store_intrinsic_fn_id
                 .borrow_mut()
                 .insert(fn_id, mode);
@@ -143,7 +141,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         self.libm_intrinsics.borrow_mut().insert(fn_id, intrinsic);
                     }
                     None => {
-                        self.tcx.sess.err(&format!(
+                        self.tcx.sess.err(format!(
                             "missing libm intrinsic {}, which is {}",
                             symbol_name, instance
                         ));
@@ -216,7 +214,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::External => Some(LinkageType::Export),
             Linkage::Internal => None,
             other => {
-                self.tcx.sess.err(&format!(
+                self.tcx.sess.err(format!(
                     "TODO: Linkage type {:?} not supported yet for static var symbol {}",
                     other, symbol_name
                 ));
@@ -246,7 +244,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
             Linkage::External | Linkage::WeakAny => Some(LinkageType::Export),
             Linkage::Internal => None,
             other => {
-                self.tcx.sess.err(&format!(
+                self.tcx.sess.err(format!(
                     "TODO: Linkage type {:?} not supported yet for function symbol {}",
                     other, symbol_name
                 ));
@@ -261,7 +259,7 @@ impl<'tcx> PreDefineMethods<'tcx> for CodegenCx<'tcx> {
 
 impl<'tcx> StaticMethods for CodegenCx<'tcx> {
     fn static_addr_of(&self, cv: Self::Value, _align: Align, _kind: Option<&str>) -> Self::Value {
-        self.builder.def_constant(
+        self.def_constant(
             self.type_ptr_to(cv.ty),
             SpirvConst::PtrTo {
                 pointee: cv.def_cx(self),
@@ -279,7 +277,7 @@ impl<'tcx> StaticMethods for CodegenCx<'tcx> {
         };
         let value_ty = match self.lookup_type(g.ty) {
             SpirvType::Pointer { pointee } => pointee,
-            other => self.tcx.sess.fatal(&format!(
+            other => self.tcx.sess.fatal(format!(
                 "global had non-pointer type {}",
                 other.debug(g.ty, self)
             )),

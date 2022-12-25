@@ -1,8 +1,14 @@
 error: Cannot memcpy dynamically sized data
-    --> $CORE_SRC/intrinsics.rs:2210:9
+    --> $CORE_SRC/intrinsics.rs:2449:9
      |
-2210 |         copy(src, dst, count)
+2449 |         copy(src, dst, count)
      |         ^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: Stack:
+             core::intrinsics::copy::<f32>
+             ptr_copy::copy_via_raw_ptr
+             ptr_copy::main
+             main
 
 error: aborting due to previous error
 

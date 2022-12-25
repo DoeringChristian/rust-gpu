@@ -1,3 +1,6 @@
+// HACK(eddyb) duplicate of asm_op_decorate.spirt.rs because only-/ignore- do not work with revisions.
+// only-not_spirt
+
 // build-pass
 // compile-flags: -C target-feature=+RuntimeDescriptorArray,+ext:SPV_EXT_descriptor_indexing
 // compile-flags: -C llvm-args=--disassemble-globals
@@ -11,7 +14,7 @@
 // ignore-vulkan1.2
 
 use core::arch::asm;
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn add_decorate() {
     unsafe {

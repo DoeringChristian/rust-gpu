@@ -1,7 +1,7 @@
 use crate::attr::{Entry, ExecutionModeExtra, IntrinsicType, SpirvAttribute};
 use crate::builder::libm_intrinsics;
 use rspirv::spirv::{BuiltIn, ExecutionMode, ExecutionModel, StorageClass};
-use rustc_ast::ast::{Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
+use rustc_ast::ast::{AttrKind, Attribute, Lit, LitIntType, LitKind, NestedMetaItem};
 use rustc_data_structures::fx::FxHashMap;
 use rustc_span::symbol::{Ident, Symbol};
 use rustc_span::Span;
@@ -16,6 +16,8 @@ pub struct Symbols {
     // Used by `is_blocklisted_fn`.
     pub fmt_decimal: Symbol,
 
+    pub discriminant: Symbol,
+    pub rust_gpu: Symbol,
     pub spirv: Symbol,
     pub spirv_std: Symbol,
     pub libm: Symbol,
@@ -23,9 +25,11 @@ pub struct Symbols {
     pub entry_point_name: Symbol,
     pub spv_intel_shader_integer_functions2: Symbol,
     pub spv_khr_vulkan_memory_model: Symbol,
+
     descriptor_set: Symbol,
     binding: Symbol,
     input_attachment_index: Symbol,
+
     attributes: FxHashMap<Symbol, SpirvAttribute>,
     execution_modes: FxHashMap<Symbol, (ExecutionMode, ExecutionModeExtraDim)>,
     pub libm_intrinsics: FxHashMap<Symbol, libm_intrinsics::LibmIntrinsic>,
@@ -338,7 +342,6 @@ impl Symbols {
                 "matrix",
                 SpirvAttribute::IntrinsicType(IntrinsicType::Matrix),
             ),
-            ("unroll_loops", SpirvAttribute::UnrollLoops),
             ("buffer_load_intrinsic", SpirvAttribute::BufferLoadIntrinsic),
             (
                 "buffer_store_intrinsic",
@@ -373,6 +376,8 @@ impl Symbols {
         Self {
             fmt_decimal: Symbol::intern("fmt_decimal"),
 
+            discriminant: Symbol::intern("discriminant"),
+            rust_gpu: Symbol::intern("rust_gpu"),
             spirv: Symbol::intern("spirv"),
             spirv_std: Symbol::intern("spirv_std"),
             libm: Symbol::intern("libm"),
@@ -382,9 +387,11 @@ impl Symbols {
                 "SPV_INTEL_shader_integer_functions2",
             ),
             spv_khr_vulkan_memory_model: Symbol::intern("SPV_KHR_vulkan_memory_model"),
+
             descriptor_set: Symbol::intern("descriptor_set"),
             binding: Symbol::intern("binding"),
             input_attachment_index: Symbol::intern("input_attachment_index"),
+
             attributes,
             execution_modes,
             libm_intrinsics,
@@ -411,20 +418,44 @@ pub(crate) fn parse_attrs_for_checking<'a>(
     attrs: &'a [Attribute],
 ) -> impl Iterator<Item = Result<(Span, SpirvAttribute), ParseAttrError>> + 'a {
     attrs.iter().flat_map(move |attr| {
-        let (whole_attr_error, args) = if !attr.has_name(sym.spirv) {
-            // Use an empty vec here to return empty
-            (None, Vec::new())
-        } else if let Some(args) = attr.meta_item_list() {
-            (None, args)
-        } else {
-            (
-                Some(Err((
-                    attr.span,
-                    "#[spirv(..)] attribute must have at least one argument".to_string(),
-                ))),
-                Vec::new(),
-            )
+        let (whole_attr_error, args) = match attr.kind {
+            AttrKind::Normal(ref normal) => {
+                // #[...]
+                let s = &normal.item.path.segments;
+                if s.len() > 1 && s[0].ident.name == sym.rust_gpu {
+                    // #[rust_gpu ...]
+                    if s.len() != 2 || s[1].ident.name != sym.spirv {
+                        // #[rust_gpu::...] but not #[rust_gpu::spirv]
+                        (
+                            Some(Err((
+                                attr.span,
+                                "unknown `rust_gpu` attribute, expected `rust_gpu::spirv`"
+                                    .to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    } else if let Some(args) = attr.meta_item_list() {
+                        // #[rust_gpu::spirv(...)]
+                        (None, args)
+                    } else {
+                        // #[rust_gpu::spirv]
+                        (
+                            Some(Err((
+                                attr.span,
+                                "#[rust_gpu::spirv(..)] attribute must have at least one argument"
+                                    .to_string(),
+                            ))),
+                            Vec::new(),
+                        )
+                    }
+                } else {
+                    // #[...] but not #[rust_gpu ...]
+                    (None, Vec::new())
+                }
+            }
+            AttrKind::DocComment(..) => (None, Vec::new()), // doccomment
         };
+
         whole_attr_error
             .into_iter()
             .chain(args.into_iter().map(move |ref arg| {
@@ -616,9 +647,7 @@ fn parse_entry_attrs(
                             return Err((
                                 attr_name.span,
                                 format!(
-                                    "#[spirv({}(..))] unknown attribute argument {}",
-                                    name.name.to_ident_string(),
-                                    attr_name.name.to_ident_string()
+                                    "#[spirv({name}(..))] unknown attribute argument {attr_name}"
                                 ),
                             ))
                         }
@@ -626,20 +655,13 @@ fn parse_entry_attrs(
                 } else {
                     return Err((
                         attr_name.span,
-                        format!(
-                            "#[spirv({}(..))] unknown attribute argument {}",
-                            name.name.to_ident_string(),
-                            attr_name.name.to_ident_string()
-                        ),
+                        format!("#[spirv({name}(..))] unknown attribute argument {attr_name}",),
                     ));
                 }
             } else {
                 return Err((
                     arg.span(),
-                    format!(
-                        "#[spirv({}(..))] attribute argument must be single identifier",
-                        name.name.to_ident_string()
-                    ),
+                    format!("#[spirv({name}(..))] attribute argument must be single identifier"),
                 ));
             }
         }

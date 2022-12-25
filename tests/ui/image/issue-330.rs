@@ -1,7 +1,7 @@
 use spirv_std::glam::Vec4;
+use spirv_std::spirv;
 use spirv_std::{image::Image2dArray, Sampler};
 
-#[allow(unused_attributes)]
 #[spirv(fragment)]
 pub fn ps_main_stereo(
     output: &mut Vec4,

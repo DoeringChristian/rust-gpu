@@ -6,10 +6,8 @@
         asm_experimental_arch,
         core_intrinsics,
         lang_items,
-        register_attr,
         repr_simd,
-    ),
-    register_attr(spirv)
+    )
 )]
 // BEGIN - Embark standard lints v0.4
 // do not change or add/remove here, but one can add exceptions after this section
@@ -89,12 +87,11 @@
     clippy::unimplemented,
 )]
 #![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
 
-//! Core functions, traits, and more that make up a "standard library" for SPIR-V for use in
-//! rust-gpu.
-
-#[cfg_attr(not(target_arch = "spirv"), macro_use)]
+#[macro_use]
 pub extern crate spirv_std_macros as macros;
+pub use macros::spirv;
 
 pub mod arch;
 pub mod byte_addressable_buffer;
@@ -102,6 +99,7 @@ pub mod float;
 pub mod image;
 pub mod integer;
 pub mod memory;
+pub mod number;
 pub mod ray_tracing;
 mod runtime_array;
 mod sampler;
@@ -130,7 +128,7 @@ extern "C" fn rust_eh_personality() {}
 
 // See: https://github.com/rust-lang/rust/issues/84738
 #[doc(hidden)]
-/// [spirv_types]
+/// [spirv_std_types]
 pub fn workaround_rustdoc_ice_84738() {}
 
 #[doc(hidden)]

@@ -6,43 +6,44 @@ use rspirv::spirv::Word;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{BaseTypeMethods, ConstMethods, MiscMethods, StaticMethods};
 use rustc_middle::bug;
-use rustc_middle::mir::interpret::{
-    alloc_range, ConstAllocation, GlobalAlloc, Scalar, ScalarMaybeUninit,
-};
+use rustc_middle::mir::interpret::{alloc_range, ConstAllocation, GlobalAlloc, Scalar};
 use rustc_middle::ty::layout::{LayoutOf, TyAndLayout};
-use rustc_span::symbol::Symbol;
 use rustc_span::{Span, DUMMY_SP};
 use rustc_target::abi::{self, AddressSpace, HasDataLayout, Integer, Primitive, Size};
 
 impl<'tcx> CodegenCx<'tcx> {
+    pub fn def_constant(&self, ty: Word, val: SpirvConst<'_>) -> SpirvValue {
+        self.builder.def_constant_cx(ty, val, self)
+    }
+
     pub fn constant_u8(&self, span: Span, val: u8) -> SpirvValue {
         let ty = SpirvType::Integer(8, false).def(span, self);
-        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
+        self.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_i16(&self, span: Span, val: i16) -> SpirvValue {
         let ty = SpirvType::Integer(16, true).def(span, self);
-        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
+        self.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_u16(&self, span: Span, val: u16) -> SpirvValue {
         let ty = SpirvType::Integer(16, false).def(span, self);
-        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
+        self.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_i32(&self, span: Span, val: i32) -> SpirvValue {
         let ty = SpirvType::Integer(32, true).def(span, self);
-        self.builder.def_constant(ty, SpirvConst::U32(val as u32))
+        self.def_constant(ty, SpirvConst::U32(val as u32))
     }
 
     pub fn constant_u32(&self, span: Span, val: u32) -> SpirvValue {
         let ty = SpirvType::Integer(32, false).def(span, self);
-        self.builder.def_constant(ty, SpirvConst::U32(val))
+        self.def_constant(ty, SpirvConst::U32(val))
     }
 
     pub fn constant_u64(&self, span: Span, val: u64) -> SpirvValue {
         let ty = SpirvType::Integer(64, false).def(span, self);
-        self.builder.def_constant(ty, SpirvConst::U64(val))
+        self.def_constant(ty, SpirvConst::U64(val))
     }
 
     pub fn constant_int(&self, ty: Word, val: u64) -> SpirvValue {
@@ -50,7 +51,7 @@ impl<'tcx> CodegenCx<'tcx> {
             SpirvType::Integer(bits @ 8..=32, signed) => {
                 let size = Size::from_bits(bits);
                 let val = val as u128;
-                self.builder.def_constant(
+                self.def_constant(
                     ty,
                     SpirvConst::U32(if signed {
                         size.sign_extend(val)
@@ -59,20 +60,20 @@ impl<'tcx> CodegenCx<'tcx> {
                     } as u32),
                 )
             }
-            SpirvType::Integer(64, _) => self.builder.def_constant(ty, SpirvConst::U64(val)),
+            SpirvType::Integer(64, _) => self.def_constant(ty, SpirvConst::U64(val)),
             SpirvType::Bool => match val {
-                0 | 1 => self.builder.def_constant(ty, SpirvConst::Bool(val != 0)),
+                0 | 1 => self.def_constant(ty, SpirvConst::Bool(val != 0)),
                 _ => self
                     .tcx
                     .sess
-                    .fatal(&format!("Invalid constant value for bool: {}", val)),
+                    .fatal(format!("Invalid constant value for bool: {}", val)),
             },
             SpirvType::Integer(128, _) => {
                 let result = self.undef(ty);
                 self.zombie_no_span(result.def_cx(self), "u128 constant");
                 result
             }
-            other => self.tcx.sess.fatal(&format!(
+            other => self.tcx.sess.fatal(format!(
                 "constant_int invalid on type {}",
                 other.debug(ty, self)
             )),
@@ -81,25 +82,19 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn constant_f32(&self, span: Span, val: f32) -> SpirvValue {
         let ty = SpirvType::Float(32).def(span, self);
-        self.builder
-            .def_constant(ty, SpirvConst::F32(val.to_bits()))
+        self.def_constant(ty, SpirvConst::F32(val.to_bits()))
     }
 
     pub fn constant_f64(&self, span: Span, val: f64) -> SpirvValue {
         let ty = SpirvType::Float(64).def(span, self);
-        self.builder
-            .def_constant(ty, SpirvConst::F64(val.to_bits()))
+        self.def_constant(ty, SpirvConst::F64(val.to_bits()))
     }
 
     pub fn constant_float(&self, ty: Word, val: f64) -> SpirvValue {
         match self.lookup_type(ty) {
-            SpirvType::Float(32) => self
-                .builder
-                .def_constant(ty, SpirvConst::F32((val as f32).to_bits())),
-            SpirvType::Float(64) => self
-                .builder
-                .def_constant(ty, SpirvConst::F64(val.to_bits())),
-            other => self.tcx.sess.fatal(&format!(
+            SpirvType::Float(32) => self.def_constant(ty, SpirvConst::F32((val as f32).to_bits())),
+            SpirvType::Float(64) => self.def_constant(ty, SpirvConst::F64(val.to_bits())),
+            other => self.tcx.sess.fatal(format!(
                 "constant_float invalid on type {}",
                 other.debug(ty, self)
             )),
@@ -108,20 +103,20 @@ impl<'tcx> CodegenCx<'tcx> {
 
     pub fn constant_bool(&self, span: Span, val: bool) -> SpirvValue {
         let ty = SpirvType::Bool.def(span, self);
-        self.builder.def_constant(ty, SpirvConst::Bool(val))
+        self.def_constant(ty, SpirvConst::Bool(val))
     }
 
     pub fn constant_composite(&self, ty: Word, fields: impl Iterator<Item = Word>) -> SpirvValue {
-        self.builder
-            .def_constant(ty, SpirvConst::Composite(fields.collect()))
+        // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
+        self.def_constant(ty, SpirvConst::Composite(&fields.collect::<Vec<_>>()))
     }
 
     pub fn constant_null(&self, ty: Word) -> SpirvValue {
-        self.builder.def_constant(ty, SpirvConst::Null)
+        self.def_constant(ty, SpirvConst::Null)
     }
 
     pub fn undef(&self, ty: Word) -> SpirvValue {
-        self.builder.def_constant(ty, SpirvConst::Undef)
+        self.def_constant(ty, SpirvConst::Undef)
     }
 }
 
@@ -168,14 +163,14 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
         self.constant_float(t, val)
     }
 
-    fn const_str(&self, s: Symbol) -> (Self::Value, Self::Value) {
-        let len = s.as_str().len();
+    fn const_str(&self, s: &str) -> (Self::Value, Self::Value) {
+        let len = s.len();
         let str_ty = self
             .layout_of(self.tcx.types.str_)
             .spirv_type(DUMMY_SP, self);
         // FIXME(eddyb) include the actual byte data.
         (
-            self.builder.def_constant(
+            self.def_constant(
                 self.type_ptr_to(str_ty),
                 SpirvConst::PtrTo {
                     pointee: self.undef(str_ty).def_cx(self),
@@ -186,14 +181,15 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
     }
     fn const_struct(&self, elts: &[Self::Value], _packed: bool) -> Self::Value {
         // Presumably this will get bitcasted to the right type?
+        // FIXME(eddyb) use `AccumulateVec`s just like `rustc` itself does.
         let field_types = elts.iter().map(|f| f.ty).collect::<Vec<_>>();
         let (field_offsets, size, align) = crate::abi::auto_struct_layout(self, &field_types);
         let struct_ty = SpirvType::Adt {
             def_id: None,
             size,
             align,
-            field_types,
-            field_offsets,
+            field_types: &field_types,
+            field_offsets: &field_offsets,
             field_names: None,
         }
         .def(DUMMY_SP, self);
@@ -237,9 +233,9 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                             _ => self
                                 .tcx
                                 .sess
-                                .fatal(&format!("Invalid constant value for bool: {}", data)),
+                                .fatal(format!("Invalid constant value for bool: {}", data)),
                         },
-                        other => self.tcx.sess.fatal(&format!(
+                        other => self.tcx.sess.fatal(format!(
                             "scalar_to_backend Primitive::Int not supported on type {}",
                             other.debug(ty, self)
                         )),
@@ -277,7 +273,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                     GlobalAlloc::Memory(alloc) => {
                         let pointee = match self.lookup_type(ty) {
                             SpirvType::Pointer { pointee } => pointee,
-                            other => self.tcx.sess.fatal(&format!(
+                            other => self.tcx.sess.fatal(format!(
                                 "GlobalAlloc::Memory type not implemented: {}",
                                 other.debug(ty, self)
                             )),
@@ -290,6 +286,22 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
                         self.get_fn_addr(fn_instance.polymorphize(self.tcx)),
                         self.data_layout().instruction_address_space,
                     ),
+                    GlobalAlloc::VTable(vty, trait_ref) => {
+                        let alloc = self
+                            .tcx
+                            .global_alloc(self.tcx.vtable_allocation((vty, trait_ref)))
+                            .unwrap_memory();
+                        let pointee = match self.lookup_type(ty) {
+                            SpirvType::Pointer { pointee } => pointee,
+                            other => self.tcx.sess.fatal(format!(
+                                "GlobalAlloc::VTable type not implemented: {}",
+                                other.debug(ty, self)
+                            )),
+                        };
+                        let init = self.create_const_alloc(alloc, pointee);
+                        let value = self.static_addr_of(init, alloc.inner().align, None);
+                        (value, AddressSpace::DATA)
+                    }
                     GlobalAlloc::Static(def_id) => {
                         assert!(self.tcx.is_static(def_id));
                         assert!(!self.tcx.is_thread_local_static(def_id));
@@ -317,6 +329,7 @@ impl<'tcx> ConstMethods<'tcx> for CodegenCx<'tcx> {
             }
         }
     }
+
     // FIXME(eddyb) this shouldn't exist, and is only used by vtable creation,
     // see https://github.com/rust-lang/rust/pull/86475#discussion_r680792727.
     fn const_data_from_alloc(&self, _alloc: ConstAllocation<'tcx>) -> Self::Value {
@@ -413,7 +426,7 @@ impl<'tcx> CodegenCx<'tcx> {
                             other => {
                                 self.tcx
                                     .sess
-                                    .fatal(&format!("invalid size for integer: {}", other));
+                                    .fatal(format!("invalid size for integer: {}", other));
                             }
                         };
                         Primitive::Int(integer, int_signedness)
@@ -424,7 +437,7 @@ impl<'tcx> CodegenCx<'tcx> {
                         other => {
                             self.tcx
                                 .sess
-                                .fatal(&format!("invalid size for float: {}", other));
+                                .fatal(format!("invalid size for float: {}", other));
                         }
                     },
                     SpirvType::Pointer { .. } => Primitive::Pointer,
@@ -438,15 +451,15 @@ impl<'tcx> CodegenCx<'tcx> {
                 // only uses the input alloc_id in the case that the scalar is uninitilized
                 // as part of the error output
                 // tldr, the pointer here is only needed for the offset
-                let value = match alloc
-                    .inner()
-                    .read_scalar(self, alloc_range(*offset, size))
-                    .unwrap()
-                {
-                    ScalarMaybeUninit::Scalar(scalar) => {
+                let value = match alloc.inner().read_scalar(
+                    self,
+                    alloc_range(*offset, size),
+                    primitive.is_ptr(),
+                ) {
+                    Ok(scalar) => {
                         self.scalar_to_backend(scalar, self.primitive_to_scalar(primitive), ty)
                     }
-                    ScalarMaybeUninit::Uninit => self.undef(ty),
+                    _ => self.undef(ty),
                 };
                 *offset += size;
                 value

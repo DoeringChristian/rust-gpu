@@ -4,13 +4,13 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 fn has_two_decimal_digits(x: u32) -> bool {
     (10..100).contains(&x)
 }
 
 #[spirv(fragment)]
-pub fn main(#[spirv(flat)] i: u32, #[spirv(flat)] o: &mut u32) {
+pub fn main(#[spirv(flat)] i: u32, o: &mut u32) {
     *o = has_two_decimal_digits(i) as u32;
 }

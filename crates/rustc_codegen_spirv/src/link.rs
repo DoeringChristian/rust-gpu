@@ -1,14 +1,16 @@
-use crate::codegen_cx::{CodegenArgs, ModuleOutputType, SpirvMetadata};
+use crate::codegen_cx::{CodegenArgs, SpirvMetadata};
 use crate::{linker, SpirvCodegenBackend, SpirvModuleBuffer, SpirvThinBuffer};
 use ar::{Archive, GnuBuilder, Header};
 use rspirv::binary::Assemble;
+use rspirv::dr::Module;
 use rustc_ast::CRATE_NODE_ID;
 use rustc_codegen_spirv_types::{CompileResult, ModuleResult};
 use rustc_codegen_ssa::back::lto::{LtoModuleCodegen, SerializedModule, ThinModule, ThinShared};
 use rustc_codegen_ssa::back::write::CodegenContext;
-use rustc_codegen_ssa::{CodegenResults, NativeLib, METADATA_FILENAME};
+use rustc_codegen_ssa::{CodegenResults, NativeLib};
 use rustc_data_structures::fx::FxHashSet;
 use rustc_errors::FatalError;
+use rustc_metadata::fs::METADATA_FILENAME;
 use rustc_middle::bug;
 use rustc_middle::dep_graph::WorkProduct;
 use rustc_middle::middle::dependency_format::Linkage;
@@ -16,8 +18,8 @@ use rustc_session::config::{CrateType, DebugInfo, Lto, OptLevel, OutputFilenames
 use rustc_session::output::{check_file_is_writeable, invalid_output_for_target, out_filename};
 use rustc_session::utils::NativeLibKind;
 use rustc_session::Session;
-use std::env;
-use std::ffi::CString;
+use std::collections::BTreeMap;
+use std::ffi::{CString, OsStr};
 use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::iter;
@@ -32,7 +34,7 @@ pub fn link<'a>(
 ) {
     let output_metadata = sess.opts.output_types.contains_key(&OutputType::Metadata);
     for &crate_type in sess.crate_types().iter() {
-        if (sess.opts.debugging_opts.no_codegen || !sess.opts.output_types.should_codegen())
+        if (sess.opts.unstable_opts.no_codegen || !sess.opts.output_types.should_codegen())
             && !output_metadata
             && crate_type == CrateType::Executable
         {
@@ -62,10 +64,24 @@ pub fn link<'a>(
                     link_rlib(sess, codegen_results, &out_filename);
                 }
                 CrateType::Executable | CrateType::Cdylib | CrateType::Dylib => {
-                    link_exe(sess, crate_type, &out_filename, codegen_results);
+                    // HACK(eddyb) there's no way way to access `outputs.filestem`,
+                    // so we pay the cost of building a whole `PathBuf` instead.
+                    let disambiguated_crate_name_for_dumps = outputs
+                        .with_extension("")
+                        .file_name()
+                        .unwrap()
+                        .to_os_string();
+
+                    link_exe(
+                        sess,
+                        crate_type,
+                        &out_filename,
+                        codegen_results,
+                        &disambiguated_crate_name_for_dumps,
+                    );
                 }
                 other => {
-                    sess.err(&format!("CrateType {:?} not supported yet", other));
+                    sess.err(format!("CrateType {:?} not supported yet", other));
                 }
             }
         }
@@ -94,10 +110,11 @@ fn link_rlib(sess: &Session, codegen_results: &CodegenResults, out_filename: &Pa
             | NativeLibKind::Dylib { .. }
             | NativeLibKind::Framework { .. }
             | NativeLibKind::RawDylib
+            | NativeLibKind::LinkArg
             | NativeLibKind::Unspecified => continue,
         }
         if let Some(name) = lib.name {
-            sess.err(&format!(
+            sess.err(format!(
                 "Adding native library to rlib not supported yet: {}",
                 name
             ));
@@ -116,6 +133,7 @@ fn link_exe(
     crate_type: CrateType,
     out_filename: &Path,
     codegen_results: &CodegenResults,
+    disambiguated_crate_name_for_dumps: &OsStr,
 ) {
     let mut objects = Vec::new();
     let mut rlibs = Vec::new();
@@ -136,47 +154,52 @@ fn link_exe(
 
     let cg_args = CodegenArgs::from_session(sess);
 
-    let spv_binary = do_link(sess, &cg_args, &objects, &rlibs);
+    // HACK(eddyb) this removes the `.json` in `.spv.json`, from `out_filename`.
+    let out_path_spv = out_filename.with_extension("");
 
-    let mut root_file_name = out_filename.file_name().unwrap().to_owned();
-    root_file_name.push(".dir");
-    let out_dir = out_filename.with_file_name(root_file_name);
-    if !out_dir.is_dir() {
-        std::fs::create_dir_all(&out_dir).unwrap();
-    }
-
-    let compile_result = match spv_binary {
-        linker::LinkResult::SingleModule(spv_binary) => {
-            let mut module_filename = out_dir;
-            module_filename.push("module");
-            post_link_single_module(sess, &cg_args, spv_binary.assemble(), &module_filename);
-            cg_args.do_disassemble(&spv_binary);
-            let module_result = ModuleResult::SingleModule(module_filename);
+    let link_result = do_link(
+        sess,
+        &cg_args,
+        &objects,
+        &rlibs,
+        disambiguated_crate_name_for_dumps,
+    );
+    let compile_result = match link_result {
+        linker::LinkResult::SingleModule(module) => {
+            let entry_points = entry_points(&module);
+            post_link_single_module(sess, &cg_args, *module, &out_path_spv, None);
             CompileResult {
-                module: module_result,
-                entry_points: entry_points(&spv_binary),
+                entry_points,
+                module: ModuleResult::SingleModule(out_path_spv),
             }
         }
-        linker::LinkResult::MultipleModules(map) => {
-            let entry_points = map.keys().cloned().collect();
-            let map = map
+        linker::LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        } => {
+            let out_dir = out_path_spv.with_extension("spvs");
+            if !out_dir.is_dir() {
+                std::fs::create_dir_all(&out_dir).unwrap();
+            }
+
+            let entry_name_to_file_path: BTreeMap<_, _> = file_stem_to_entry_name_and_module
                 .into_iter()
-                .map(|(name, spv_binary)| {
-                    let mut module_filename = out_dir.clone();
-                    module_filename.push(sanitize_filename::sanitize(&name));
+                .map(|(file_stem, (entry_name, module))| {
+                    let mut out_file_name = file_stem;
+                    out_file_name.push(".spv");
+                    let out_file_path = out_dir.join(out_file_name);
                     post_link_single_module(
                         sess,
                         &cg_args,
-                        spv_binary.assemble(),
-                        &module_filename,
+                        module,
+                        &out_file_path,
+                        Some(disambiguated_crate_name_for_dumps),
                     );
-                    (name, module_filename)
+                    (entry_name, out_file_path)
                 })
                 .collect();
-            let module_result = ModuleResult::MultiModule(map);
             CompileResult {
-                module: module_result,
-                entry_points,
+                entry_points: entry_name_to_file_path.keys().cloned().collect(),
+                module: ModuleResult::MultiModule(entry_name_to_file_path),
             }
         }
     };
@@ -197,12 +220,21 @@ fn entry_points(module: &rspirv::dr::Module) -> Vec<String> {
 fn post_link_single_module(
     sess: &Session,
     cg_args: &CodegenArgs,
-    spv_binary: Vec<u32>,
+    module: Module,
     out_filename: &Path,
+    dump_prefix: Option<&OsStr>,
 ) {
-    if let Some(mut path) = crate::get_env_dump_dir("DUMP_POST_LINK") {
-        path.push(out_filename.file_name().unwrap());
-        std::fs::write(path, spirv_tools::binary::from_binary(&spv_binary)).unwrap();
+    cg_args.do_disassemble(&module);
+    let spv_binary = module.assemble();
+
+    if let Some(dir) = &cg_args.dump_post_link {
+        // FIXME(eddyb) rename `filename` with `file_path` to make this less confusing.
+        let out_filename_file_name = out_filename.file_name().unwrap();
+        let dump_path = match dump_prefix {
+            Some(prefix) => dir.join(prefix).with_extension(out_filename_file_name),
+            None => dir.join(out_filename_file_name),
+        };
+        std::fs::write(dump_path, spirv_tools::binary::from_binary(&spv_binary)).unwrap();
     }
 
     let val_options = spirv_tools::val::ValidatorOptions {
@@ -225,7 +257,7 @@ fn post_link_single_module(
     let spv_binary = if sess.opts.optimize != OptLevel::No
         || (sess.opts.debuginfo == DebugInfo::None && cg_args.spirv_metadata == SpirvMetadata::None)
     {
-        if env::var("NO_SPIRV_OPT").is_err() {
+        if cg_args.run_spirv_opt {
             let _timer = sess.timer("link_spirv_opt");
             do_spirv_opt(sess, cg_args, spv_binary, out_filename, opt_options)
         } else {
@@ -234,8 +266,8 @@ fn post_link_single_module(
                 (optlevel, false) => format!("optlevel={:?}", optlevel),
                 (optlevel, true) => format!("optlevel={:?}, debuginfo=None", optlevel),
             };
-            sess.warn(&format!(
-                "spirv-opt should have ran ({}) but was disabled by NO_SPIRV_OPT",
+            sess.warn(format!(
+                "`spirv-opt` should have ran ({}) but was disabled by `--no-spirv-opt`",
                 reason
             ));
             spv_binary
@@ -244,7 +276,7 @@ fn post_link_single_module(
         spv_binary
     };
 
-    if env::var("NO_SPIRV_VAL").is_err() {
+    if cg_args.run_spirv_val {
         do_spirv_val(sess, &spv_binary, out_filename, val_options);
     }
 
@@ -353,11 +385,11 @@ fn link_local_crate_native_libs_and_dependent_crate_libs<'a>(
     crate_type: CrateType,
     codegen_results: &CodegenResults,
 ) {
-    if sess.opts.debugging_opts.link_native_libraries {
+    if sess.opts.unstable_opts.link_native_libraries {
         add_local_native_libraries(sess, codegen_results);
     }
     add_upstream_rust_crates(sess, rlibs, codegen_results, crate_type);
-    if sess.opts.debugging_opts.link_native_libraries {
+    if sess.opts.unstable_opts.link_native_libraries {
         add_upstream_native_libraries(sess, codegen_results, crate_type);
     }
 }
@@ -418,11 +450,11 @@ fn add_upstream_native_libraries(
                 continue;
             }
             match lib.kind {
-                NativeLibKind::Dylib { .. } | NativeLibKind::Unspecified => sess.fatal(&format!(
+                NativeLibKind::Dylib { .. } | NativeLibKind::Unspecified => sess.fatal(format!(
                     "TODO: dylib nativelibkind not supported yet: {}",
                     name
                 )),
-                NativeLibKind::Framework { .. } => sess.fatal(&format!(
+                NativeLibKind::Framework { .. } => sess.fatal(format!(
                     "TODO: framework nativelibkind not supported yet: {}",
                     name
                 )),
@@ -431,7 +463,7 @@ fn add_upstream_native_libraries(
                     ..
                 } => {
                     if data[cnum.as_usize() - 1] == Linkage::Static {
-                        sess.fatal(&format!(
+                        sess.fatal(format!(
                             "TODO: staticnobundle nativelibkind not supported yet: {}",
                             name
                         ))
@@ -442,8 +474,12 @@ fn add_upstream_native_libraries(
                     ..
                 } => {}
                 NativeLibKind::RawDylib => {
-                    sess.fatal(&format!("raw_dylib feature not yet implemented: {}", name))
+                    sess.fatal(format!("raw_dylib feature not yet implemented: {}", name))
                 }
+                NativeLibKind::LinkArg => sess.fatal(format!(
+                    "TODO: linkarg nativelibkind not supported yet: {}",
+                    name
+                )),
             }
         }
     }
@@ -491,7 +527,16 @@ fn create_archive(files: &[&Path], metadata: &[u8], out_filename: &Path) {
             "Duplicate filename in archive: {:?}",
             file.file_name().unwrap()
         );
-        builder.append_path(file).unwrap();
+
+        // NOTE(eddyb) we can't use `append_path` or `append_file`, as they
+        // record too much metadata by default (mtime/UID/GID, at least),
+        // which is determintal to reproducible build artifacts, but also
+        // can misbehave in environments with high UIDs/GIDs (see #889).
+        let file = File::open(file).unwrap();
+        let header = Header::new(name.as_bytes().to_vec(), file.metadata().unwrap().len());
+        // NOTE(eddyb) either `fs::File`, or the result of `fs::read`, could fit
+        // here, but `fs::File` has specialized file->file copying on some OSes.
+        builder.append(&header, file).unwrap();
     }
     builder.into_inner().unwrap();
 }
@@ -503,20 +548,34 @@ fn do_link(
     cg_args: &CodegenArgs,
     objects: &[PathBuf],
     rlibs: &[PathBuf],
+    disambiguated_crate_name_for_dumps: &OsStr,
 ) -> linker::LinkResult {
-    fn load(bytes: &[u8]) -> rspirv::dr::Module {
-        let mut loader = rspirv::dr::Loader::new();
-        rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
-        loader.module()
-    }
-
     let load_modules_timer = sess.timer("link_load_modules");
+
     let mut modules = Vec::new();
+    let mut add_module = |file_name: &OsStr, bytes: &[u8]| {
+        let module = {
+            let mut loader = rspirv::dr::Loader::new();
+            rspirv::binary::parse_bytes(bytes, &mut loader).unwrap();
+            loader.module()
+        };
+        if let Some(dir) = &cg_args.dump_pre_link {
+            // FIXME(eddyb) is it a good idea to re-`assemble` the `rspirv::dr`
+            // module, or should this just save the original bytes?
+            std::fs::write(
+                dir.join(file_name).with_extension("spv"),
+                spirv_tools::binary::from_binary(&module.assemble()),
+            )
+            .unwrap();
+        }
+        modules.push(module);
+    };
+
     // `objects` are the plain obj files we need to link - usually produced by the final crate.
     for obj in objects {
-        let bytes = std::fs::read(obj).unwrap();
-        modules.push(load(&bytes));
+        add_module(obj.file_name().unwrap(), &std::fs::read(obj).unwrap());
     }
+
     // `rlibs` are archive files we've created in `create_archive`, usually produced by crates that are being
     // referenced. We need to unpack them and add the modules inside.
     for rlib in rlibs {
@@ -528,32 +587,22 @@ fn do_link(
                 // https://github.com/rust-lang/rust/blob/72868e017bdade60603a25889e253f556305f996/library/std/src/fs.rs#L200-L202
                 let mut bytes = Vec::with_capacity(entry.header().size() as usize + 1);
                 entry.read_to_end(&mut bytes).unwrap();
-                modules.push(load(&bytes));
+
+                let file_name = std::str::from_utf8(entry.header().identifier()).unwrap();
+                add_module(OsStr::new(file_name), &bytes);
             }
         }
     }
 
-    if let Some(dir) = crate::get_env_dump_dir("DUMP_PRE_LINK") {
-        for (num, module) in modules.iter().enumerate() {
-            std::fs::write(
-                dir.join(format!("mod_{}.spv", num)),
-                spirv_tools::binary::from_binary(&module.assemble()),
-            )
-            .unwrap();
-        }
-    }
     drop(load_modules_timer);
 
     // Do the link...
-    let options = linker::Options {
-        dce: env::var("NO_DCE").is_err(),
-        compact_ids: env::var("NO_COMPACT_IDS").is_err(),
-        structurize: env::var("NO_STRUCTURIZE").is_err(),
-        emit_multiple_modules: cg_args.module_output_type == ModuleOutputType::Multiple,
-        spirv_metadata: cg_args.spirv_metadata,
-    };
-
-    let link_result = linker::link(sess, modules, &options);
+    let link_result = linker::link(
+        sess,
+        modules,
+        &cg_args.linker_opts,
+        disambiguated_crate_name_for_dumps,
+    );
 
     match link_result {
         Ok(v) => v,

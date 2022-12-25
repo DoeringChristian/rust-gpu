@@ -4,16 +4,16 @@
 // build-pass
 // compile-flags: -C target-feature=+VariablePointers
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-use glam::{const_mat2, Mat2, Vec2};
+use glam::{Mat2, Vec2};
 
 #[inline(never)]
 fn deep_load(r: &'static &'static u32) -> u32 {
     **r
 }
 
-const ROT90: &Mat2 = &const_mat2![[0.0, 1.0], [-1.0, 0.0]];
+const ROT90: &Mat2 = &Mat2::from_cols_array_2d(&[[0.0, 1.0], [-1.0, 0.0]]);
 
 #[inline(never)]
 fn deep_transpose(r: &'static &'static Mat2) -> Mat2 {
@@ -22,9 +22,9 @@ fn deep_transpose(r: &'static &'static Mat2) -> Mat2 {
 
 #[spirv(fragment)]
 pub fn main(
-    #[spirv(flat)] scalar_out: &mut u32,
+    scalar_out: &mut u32,
     #[spirv(push_constant)] vec_in: &Vec2,
-    #[spirv(flat)] bool_out: &mut u32,
+    bool_out: &mut u32,
     vec_out: &mut Vec2,
 ) {
     *scalar_out = deep_load(&&123);

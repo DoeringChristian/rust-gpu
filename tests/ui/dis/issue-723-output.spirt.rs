@@ -1,3 +1,6 @@
+// HACK(eddyb) duplicate of issue-723-output.not_spirt.rs because only-/ignore- do not work with revisions.
+// only-spirt
+
 // Test that interface (global) `OpVariable`s mentioned by `OpEntryPoint` don't
 // have to be used by the shader, for storage class inference to succeed.
 
@@ -16,7 +19,7 @@
 // normalize-stderr-test "OpExtension .SPV_KHR_vulkan_memory_model.\n" -> ""
 // normalize-stderr-test "OpMemoryModel Logical Vulkan" -> "OpMemoryModel Logical Simple"
 
-use spirv_std as _;
+use spirv_std::spirv;
 
 #[spirv(fragment)]
 pub fn main(/* unused Output */ _: &mut glam::Vec4) {}

@@ -23,6 +23,21 @@ members = [
     "tests/deps-helper",
 ]
 
+[workspace.package]
+version = "0.4.0"
+authors = ["Embark <opensource@embark-studios.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/EmbarkStudios/rust-gpu"
+
+[workspace.dependencies]
+spirv-std = { path = "./crates/spirv-std", version = "=0.4.0" }
+spirv-std-types = { path = "./crates/spirv-std/shared", version = "=0.4.0" }
+spirv-std-macros = { path = "./crates/spirv-std/macros", version = "=0.4.0" }
+spirv-builder = { path = "./crates/spirv-builder", version = "=0.4.0", default-features = false  }
+rustc_codegen_spirv = { path = "./crates/rustc_codegen_spirv", version = "=0.4.0", default-features = false }
+rustc_codegen_spirv-types = { path = "./crates/rustc_codegen_spirv-types", version = "=0.4.0" }
+
 # Enable incremental by default in release mode.
 [profile.release]
 incremental = true
@@ -37,10 +52,3 @@ codegen-units = 256
 opt-level = 3
 incremental = true
 codegen-units = 256
-
-[patch.crates-io]
-spirv-std = { path = "./crates/spirv-std" }
-spirv-std-macros = { path = "./crates/spirv-std/macros" }
-# HACK(eddyb) needed to include this PR (until it's part of a release):
-# * Manishearth/compiletest-rs#249 (for `// only-*` support)
-compiletest_rs = { git = "https://github.com/Manishearth/compiletest-rs.git", rev = "4ab843a1dc6ed9a82657d86d22397c6c5bb95b01" }

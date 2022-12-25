@@ -69,6 +69,7 @@
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
 // #![allow()]
+#![doc = include_str!("../README.md")]
 
 mod depfile;
 #[cfg(feature = "watch")]
@@ -339,13 +340,21 @@ impl SpirvBuilder {
         &self,
         at: &Path,
     ) -> Result<CompileResult, SpirvBuilderError> {
-        let metadata_contents = File::open(&at).map_err(SpirvBuilderError::MetadataFileMissing)?;
+        let metadata_contents = File::open(at).map_err(SpirvBuilderError::MetadataFileMissing)?;
         let metadata: CompileResult = serde_json::from_reader(BufReader::new(metadata_contents))
             .map_err(SpirvBuilderError::MetadataFileMalformed)?;
         match &metadata.module {
             ModuleResult::SingleModule(spirv_module) => {
                 assert!(!self.multimodule);
-                let env_var = at.file_name().unwrap().to_str().unwrap();
+                let env_var = format!(
+                    "{}.spv",
+                    at.file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .strip_suffix(".spv.json")
+                        .unwrap()
+                );
                 if self.print_metadata == MetadataPrintout::Full {
                     println!("cargo:rustc-env={}={}", env_var, spirv_module.display());
                 }
@@ -419,39 +428,60 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     let mut rustflags = vec![
         format!("-Zcodegen-backend={}", rustc_codegen_spirv.display()),
+        // Ensure the codegen backend is emitted in `.d` files to force Cargo
+        // to rebuild crates compiled with it when it changes (this used to be
+        // the default until https://github.com/rust-lang/rust/pull/93969).
+        "-Zbinary-dep-depinfo".to_string(),
         "-Csymbol-mangling-version=v0".to_string(),
+        "-Zcrate-attr=feature(register_tool)".to_string(),
+        "-Zcrate-attr=register_tool(rust_gpu)".to_string(),
     ];
+
+    // Wrapper for `env::var` that appropriately informs Cargo of the dependency.
+    let tracked_env_var_get = |name| {
+        if let MetadataPrintout::Full | MetadataPrintout::DependencyOnly = builder.print_metadata {
+            println!("cargo:rerun-if-env-changed={name}");
+        }
+        env::var(name)
+    };
 
     let mut llvm_args = vec![];
     if builder.multimodule {
-        llvm_args.push("--module-output=multiple");
+        llvm_args.push("--module-output=multiple".to_string());
     }
     match builder.spirv_metadata {
         SpirvMetadata::None => (),
-        SpirvMetadata::NameVariables => llvm_args.push("--spirv-metadata=name-variables"),
-        SpirvMetadata::Full => llvm_args.push("--spirv-metadata=full"),
+        SpirvMetadata::NameVariables => {
+            llvm_args.push("--spirv-metadata=name-variables".to_string());
+        }
+        SpirvMetadata::Full => llvm_args.push("--spirv-metadata=full".to_string()),
     }
     if builder.relax_struct_store {
-        llvm_args.push("--relax-struct-store");
+        llvm_args.push("--relax-struct-store".to_string());
     }
     if builder.relax_logical_pointer {
-        llvm_args.push("--relax-logical-pointer");
+        llvm_args.push("--relax-logical-pointer".to_string());
     }
     if builder.relax_block_layout {
-        llvm_args.push("--relax-block-layout");
+        llvm_args.push("--relax-block-layout".to_string());
     }
     if builder.uniform_buffer_standard_layout {
-        llvm_args.push("--uniform-buffer-standard-layout");
+        llvm_args.push("--uniform-buffer-standard-layout".to_string());
     }
     if builder.scalar_block_layout {
-        llvm_args.push("--scalar-block-layout");
+        llvm_args.push("--scalar-block-layout".to_string());
     }
     if builder.skip_block_layout {
-        llvm_args.push("--skip-block-layout");
+        llvm_args.push("--skip-block-layout".to_string());
     }
     if builder.preserve_bindings {
-        llvm_args.push("--preserve-bindings");
+        llvm_args.push("--preserve-bindings".to_string());
     }
+
+    if let Ok(extra_codegen_args) = tracked_env_var_get("RUSTGPU_CODEGEN_ARGS") {
+        llvm_args.extend(extra_codegen_args.split_whitespace().map(|s| s.to_string()));
+    }
+
     let llvm_args = join_checking_for_separators(llvm_args, " ");
     if !llvm_args.is_empty() {
         rustflags.push(["-Cllvm-args=", &llvm_args].concat());
@@ -469,8 +499,12 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
         rustflags.push("-Dwarnings".to_string());
     }
 
+    if let Ok(extra_rustflags) = tracked_env_var_get("RUSTGPU_RUSTFLAGS") {
+        rustflags.extend(extra_rustflags.split_whitespace().map(|s| s.to_string()));
+    }
+
     let mut cargo = Command::new("cargo");
-    cargo.args(&[
+    cargo.args([
         "build",
         "--lib",
         "--message-format=json-render-diagnostics",
@@ -486,24 +520,34 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
 
     // If we're nested in `cargo` invocation, use a different `--target-dir`,
     // to avoid waiting on the same lock (which effectively dead-locks us).
-    // This also helps with e.g. RLS, which uses `--target target/rls`,
-    // so we'll have a separate `target/rls/spirv-builder` for it.
-    if let (Ok(profile), Some(mut dir)) = (
-        env::var("PROFILE"),
-        env::var_os("OUT_DIR").map(PathBuf::from),
-    ) {
-        // Strip `$profile/build/*/out`.
-        if dir.ends_with("out")
-            && dir.pop()
-            && dir.pop()
-            && dir.ends_with("build")
-            && dir.pop()
-            && dir.ends_with(profile)
-            && dir.pop()
-        {
-            cargo.arg("--target-dir").arg(dir.join("spirv-builder"));
+    let outer_target_dir = match (env::var("PROFILE"), env::var_os("OUT_DIR")) {
+        (Ok(profile), Some(dir)) => {
+            // Strip `$profile/build/*/out`.
+            [&profile, "build", "*", "out"].iter().rev().try_fold(
+                PathBuf::from(dir),
+                |mut dir, &filter| {
+                    if (filter == "*" || dir.ends_with(filter)) && dir.pop() {
+                        Some(dir)
+                    } else {
+                        None
+                    }
+                },
+            )
         }
+        _ => None,
+    };
+    // FIXME(eddyb) use `crate metadata` to always be able to get the "outer"
+    // (or "default") `--target-dir`, to append `/spirv-builder` to it.
+    let target_dir = outer_target_dir.map(|outer| outer.join("spirv-builder"));
+    if let Some(target_dir) = target_dir {
+        cargo.arg("--target-dir").arg(target_dir);
     }
+
+    // NOTE(eddyb) Cargo caches some information it got from `rustc` in
+    // `.rustc_info.json`, and assumes it only depends on the `rustc` binary,
+    // but in our case, `rustc_codegen_spirv` changes are also relevant,
+    // so we turn off that caching with an env var, just to avoid any issues.
+    cargo.env("CARGO_CACHE_RUSTC_INFO", "0");
 
     for (key, _) in env::vars_os() {
         let remove = key.to_str().map_or(false, |s| {
@@ -527,9 +571,14 @@ fn invoke_rustc(builder: &SpirvBuilder) -> Result<PathBuf, SpirvBuilderError> {
     // we do that even in case of an error, to let through any useful messages
     // that ended up on stdout instead of stderr.
     let stdout = String::from_utf8(build.stdout).unwrap();
-    let artifact = get_last_artifact(&stdout);
     if build.status.success() {
-        Ok(artifact.expect("Artifact created when compilation succeeded"))
+        get_sole_artifact(&stdout).ok_or_else(|| {
+            eprintln!("--- build output ---\n{stdout}");
+            panic!(
+                "`{}` artifact not found in (supposedly successful) build output (see above)",
+                ARTIFACT_SUFFIX
+            );
+        })
     } else {
         Err(SpirvBuilderError::BuildFailed)
     }
@@ -541,7 +590,9 @@ struct RustcOutput {
     filenames: Option<Vec<String>>,
 }
 
-fn get_last_artifact(out: &str) -> Option<PathBuf> {
+const ARTIFACT_SUFFIX: &str = ".spv.json";
+
+fn get_sole_artifact(out: &str) -> Option<PathBuf> {
     let last = out
         .lines()
         .filter_map(|line| {
@@ -561,9 +612,13 @@ fn get_last_artifact(out: &str) -> Option<PathBuf> {
         .filenames
         .unwrap()
         .into_iter()
-        .filter(|v| v.ends_with(".spv"));
+        .filter(|v| v.ends_with(ARTIFACT_SUFFIX));
     let filename = filenames.next()?;
-    assert_eq!(filenames.next(), None, "Crate had multiple .spv artifacts");
+    assert_eq!(
+        filenames.next(),
+        None,
+        "build had multiple `{ARTIFACT_SUFFIX}` artifacts"
+    );
     Some(filename.into())
 }
 

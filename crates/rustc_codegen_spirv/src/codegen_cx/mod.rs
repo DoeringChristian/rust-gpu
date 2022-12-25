@@ -5,9 +5,7 @@ mod type_;
 
 use crate::builder::{ExtInst, InstructionTable};
 use crate::builder_spirv::{BuilderCursor, BuilderSpirv, SpirvConst, SpirvValue, SpirvValueKind};
-use crate::decorations::{
-    CustomDecoration, SerializedSpan, UnrollLoopsDecoration, ZombieDecoration,
-};
+use crate::decorations::{CustomDecoration, SerializedSpan, ZombieDecoration};
 use crate::spirv_type::{SpirvType, SpirvTypePrinter, TypeCache};
 use crate::symbols::Symbols;
 use crate::target::SpirvTarget;
@@ -20,21 +18,22 @@ use rustc_codegen_ssa::traits::{
     AsmMethods, BackendTypes, CoverageInfoMethods, DebugInfoMethods, GlobalAsmOperandRef,
     MiscMethods,
 };
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_middle::mir::mono::CodegenUnit;
 use rustc_middle::mir::Body;
 use rustc_middle::ty::layout::{HasParamEnv, HasTyCtxt};
 use rustc_middle::ty::{Instance, ParamEnv, PolyExistentialTraitRef, Ty, TyCtxt};
 use rustc_session::Session;
-use rustc_span::def_id::{DefId, LOCAL_CRATE};
+use rustc_span::def_id::DefId;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_span::{SourceFile, Span, DUMMY_SP};
 use rustc_target::abi::call::{FnAbi, PassMode};
 use rustc_target::abi::{HasDataLayout, TargetDataLayout};
 use rustc_target::spec::{HasTargetSpec, Target};
 use std::cell::{Cell, RefCell};
+use std::collections::BTreeSet;
 use std::iter::once;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -42,7 +41,7 @@ pub struct CodegenCx<'tcx> {
     pub tcx: TyCtxt<'tcx>,
     pub codegen_unit: &'tcx CodegenUnit<'tcx>,
     /// Spir-v module builder
-    pub builder: BuilderSpirv,
+    pub builder: BuilderSpirv<'tcx>,
     /// Map from MIR function to spir-v function ID
     pub instances: RefCell<FxHashMap<Instance<'tcx>, SpirvValue>>,
     /// Map from function ID to parameter list
@@ -55,10 +54,6 @@ pub struct CodegenCx<'tcx> {
     /// each with its own reason and span that should be used for reporting
     /// (in the event that the value is actually needed)
     zombie_decorations: RefCell<FxHashMap<Word, ZombieDecoration>>,
-    /// Functions that have `#[spirv(unroll_loops)]`, and therefore should
-    /// get `LoopControl::UNROLL` applied to all of their loops' `OpLoopMerge`
-    /// instructions, during structuralization.
-    unroll_loops_decorations: RefCell<FxHashSet<Word>>,
     /// Cache of all the builtin symbols we need
     pub sym: Rc<Symbols>,
     pub instruction_table: InstructionTable,
@@ -67,9 +62,9 @@ pub struct CodegenCx<'tcx> {
     /// Simple `panic!("...")` and builtin panics (from MIR `Assert`s) call `#[lang = "panic"]`.
     pub panic_fn_id: Cell<Option<Word>>,
     /// Intrinsic for loading a <T> from a &[u32]. The PassMode is the mode of the <T>.
-    pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, PassMode>>,
+    pub buffer_load_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
     /// Intrinsic for storing a <T> into a &[u32]. The PassMode is the mode of the <T>.
-    pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, PassMode>>,
+    pub buffer_store_intrinsic_fn_id: RefCell<FxHashMap<Word, &'tcx PassMode>>,
     /// Builtin bounds-checking panics (from MIR `Assert`s) call `#[lang = "panic_bounds_check"]`.
     pub panic_bounds_check_fn_id: Cell<Option<Word>>,
 
@@ -104,7 +99,7 @@ impl<'tcx> CodegenCx<'tcx> {
             .map(|s| s.parse())
             .collect::<Result<_, String>>()
             .unwrap_or_else(|error| {
-                tcx.sess.err(&error);
+                tcx.sess.err(error);
                 Vec::new()
             });
 
@@ -121,7 +116,6 @@ impl<'tcx> CodegenCx<'tcx> {
             vtables: Default::default(),
             ext_inst: Default::default(),
             zombie_decorations: Default::default(),
-            unroll_loops_decorations: Default::default(),
             target,
             sym,
             instruction_table: InstructionTable::new(),
@@ -152,11 +146,11 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 
     #[track_caller]
-    pub fn lookup_type(&self, ty: Word) -> SpirvType {
+    pub fn lookup_type(&self, ty: Word) -> SpirvType<'tcx> {
         self.type_cache.lookup(ty)
     }
 
-    pub fn debug_type<'cx>(&'cx self, ty: Word) -> SpirvTypePrinter<'cx, 'tcx> {
+    pub fn debug_type(&self, ty: Word) -> SpirvTypePrinter<'_, 'tcx> {
         self.lookup_type(ty).debug(ty, self)
     }
 
@@ -173,7 +167,7 @@ impl<'tcx> CodegenCx<'tcx> {
     /// Finally, if *user* code is marked as zombie, then this means that the user tried to do
     /// something that isn't supported, and should be an error.
     pub fn zombie_with_span(&self, word: Word, span: Span, reason: &str) {
-        if self.is_system_crate() {
+        if self.is_system_crate(span) {
             self.zombie_even_in_user_code(word, span, reason);
         } else {
             self.tcx.sess.span_err(span, reason);
@@ -192,14 +186,30 @@ impl<'tcx> CodegenCx<'tcx> {
         );
     }
 
-    pub fn is_system_crate(&self) -> bool {
-        self.tcx
+    /// Returns `true` if the originating crate of `span` (which could very well
+    /// be a different crate, e.g. a generic/`#[inline]` function, or a macro),
+    /// is a "system crate", and therefore allowed to have some errors deferred
+    /// as "zombies" (see `zombie_with_span`'s docs above for more details).
+    pub fn is_system_crate(&self, span: Span) -> bool {
+        // HACK(eddyb) this ignores `.lo` vs `.hi` potentially resulting in
+        // different `SourceFile`s (which is likely a bug anyway).
+        let cnum = self
+            .tcx
             .sess
-            .contains_name(self.tcx.hir().krate_attrs(), sym::compiler_builtins)
-            || self.tcx.crate_name(LOCAL_CRATE) == sym::core
-            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.spirv_std
-            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.libm
-            || self.tcx.crate_name(LOCAL_CRATE) == self.sym.num_traits
+            .source_map()
+            .lookup_source_file(span.data().lo)
+            .cnum;
+
+        self.tcx
+            .get_attr(cnum.as_def_id(), sym::compiler_builtins)
+            .is_some()
+            || [
+                sym::core,
+                self.sym.spirv_std,
+                self.sym.libm,
+                self.sym.num_traits,
+            ]
+            .contains(&self.tcx.crate_name(cnum))
     }
 
     pub fn finalize_module(self) -> Module {
@@ -208,13 +218,7 @@ impl<'tcx> CodegenCx<'tcx> {
             self.zombie_decorations
                 .into_inner()
                 .into_iter()
-                .map(|(id, zombie)| zombie.encode(id))
-                .chain(
-                    self.unroll_loops_decorations
-                        .into_inner()
-                        .into_iter()
-                        .map(|id| UnrollLoopsDecoration {}.encode(id)),
-                ),
+                .map(|(id, zombie)| zombie.encode(id)),
         );
         result
     }
@@ -228,8 +232,9 @@ impl<'tcx> CodegenCx<'tcx> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum SpirvMetadata {
+    #[default]
     None,
     NameVariables,
     Full,
@@ -244,6 +249,8 @@ pub struct CodegenArgs {
 
     pub spirv_metadata: SpirvMetadata,
 
+    pub run_spirv_val: bool,
+
     // spirv-val flags
     pub relax_struct_store: bool,
     pub relax_logical_pointer: bool,
@@ -252,28 +259,48 @@ pub struct CodegenArgs {
     pub scalar_block_layout: bool,
     pub skip_block_layout: bool,
 
+    pub run_spirv_opt: bool,
+
     // spirv-opt flags
     pub preserve_bindings: bool,
+
+    /// All options pertinent to `rustc_codegen_spirv::linker` specifically.
+    //
+    // FIXME(eddyb) should these be handled as `-C linker-args="..."` instead?
+    pub linker_opts: crate::linker::Options,
+
+    // NOTE(eddyb) these are debugging options that used to be env vars
+    // (for more information see `docs/src/codegen-args.md`).
+    pub dump_mir: Option<PathBuf>,
+    pub dump_module_on_panic: Option<PathBuf>,
+    pub dump_pre_link: Option<PathBuf>,
+    pub dump_post_link: Option<PathBuf>,
 }
 
 impl CodegenArgs {
     pub fn from_session(sess: &Session) -> Self {
         match CodegenArgs::parse(&sess.opts.cg.llvm_args) {
             Ok(ok) => ok,
-            Err(err) => sess.fatal(&format!("Unable to parse llvm-args: {}", err)),
+            Err(err) => sess.fatal(format!("Unable to parse llvm-args: {}", err)),
         }
     }
 
+    // FIXME(eddyb) `structopt` would come a long way to making this nicer.
     pub fn parse(args: &[String]) -> Result<Self, rustc_session::getopts::Fail> {
         use rustc_session::getopts;
+
+        // FIXME(eddyb) figure out what casing ("Foo bar" vs "foo bar") to use
+        // for the descriptions, `rustc` seems a bit inconsistent itself on this.
+
         let mut opts = getopts::Options::new();
+        opts.optflag("h", "help", "Display this message");
         opts.optopt(
             "",
             "module-output",
             "single output or multiple output",
             "[single|multiple]",
         );
-        opts.optflagopt("", "disassemble", "print module to stderr", "");
+        opts.optflag("", "disassemble", "print module to stderr");
         opts.optopt("", "disassemble-fn", "print function to stderr", "NAME");
         opts.optopt(
             "",
@@ -281,25 +308,168 @@ impl CodegenArgs {
             "print entry point to stderr",
             "NAME",
         );
-        opts.optflagopt("", "disassemble-globals", "print globals to stderr", "");
+        opts.optflag("", "disassemble-globals", "print globals to stderr");
 
         opts.optopt("", "spirv-metadata", "how much metadata to include", "");
 
-        opts.optflagopt("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.", "");
-        opts.optflagopt("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode", "");
-        opts.optflagopt("", "relax-block-layout", "Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.", "");
-        opts.optflagopt("", "uniform-buffer-standard-layout", "Enable VK_KHR_uniform_buffer_standard_layout when checking standard uniform buffer layouts.", "");
-        opts.optflagopt("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.", "");
-        opts.optflagopt("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.", "");
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        opts.optflag(
+            "",
+            "no-spirv-val",
+            "disables running spirv-val on the final output",
+        );
 
-        opts.optflagopt(
+        opts.optflag("", "relax-struct-store", "Allow store from one struct type to a different type with compatible layout and members.");
+        opts.optflag("", "relax-logical-pointer", "Allow allocating an object of a pointer type and returning a pointer value from a function in logical addressing mode");
+        opts.optflag("", "relax-block-layout", "Enable VK_KHR_relaxed_block_layout when checking standard uniform, storage buffer, and push constant layouts. This is the default when targeting Vulkan 1.1 or later.");
+        opts.optflag("", "uniform-buffer-standard-layout", "Enable VK_KHR_uniform_buffer_standard_layout when checking standard uniform buffer layouts.");
+        opts.optflag("", "scalar-block-layout", "Enable VK_EXT_scalar_block_layout when checking standard uniform, storage buffer, and push constant layouts. Scalar layout rules are more permissive than relaxed block layout so in effect this will override the --relax-block-layout option.");
+        opts.optflag("", "skip-block-layout", "Skip checking standard uniform/storage buffer layout. Overrides any --relax-block-layout or --scalar-block-layout option.");
+
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        opts.optflag(
+            "",
+            "no-spirv-opt",
+            "disables running spirv-opt on the final output",
+        );
+
+        opts.optflag(
             "",
             "preserve-bindings",
             "Preserve unused descriptor bindings. Useful for reflection.",
+        );
+
+        // Linker options.
+        // FIXME(eddyb) should these be handled as `-C linker-args="..."` instead?
+        {
+            // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+            opts.optflag("", "no-dce", "disables running dead code elimination");
+            opts.optflag(
+                "",
+                "no-compact-ids",
+                "disables compaction of SPIR-V IDs at the end of linking",
+            );
+            opts.optflag("", "no-structurize", "disables CFG structurization");
+
+            opts.optflag(
+                "",
+                "spirt",
+                "use SPIR-T for legalization (see also `docs/src/codegen-args.md`)",
+            );
+
+            // NOTE(eddyb) these are debugging options that used to be env vars
+            // (for more information see `docs/src/codegen-args.md`).
+            opts.optopt(
+                "",
+                "dump-post-merge",
+                "dump the merged module immediately after merging, to a file in DIR",
+                "DIR",
+            );
+            opts.optopt(
+                "",
+                "dump-post-split",
+                "dump modules immediately after multimodule splitting, to files in DIR",
+                "DIR",
+            );
+            opts.optopt(
+                "",
+                "dump-spirt-passes",
+                "dump the SPIR-T module across passes, to a (pair of) file(s) in DIR",
+                "DIR",
+            );
+            opts.optflag(
+                "",
+                "specializer-debug",
+                "enable debug logging for the specializer",
+            );
+            opts.optopt(
+                "",
+                "specializer-dump-instances",
+                "dump all instances inferred by the specializer, to FILE",
+                "FILE",
+            );
+            opts.optflag("", "print-all-zombie", "prints all removed zombies");
+            opts.optflag(
+                "",
+                "print-zombie",
+                "prints everything removed (even transitively) due to zombies",
+            );
+        }
+
+        // NOTE(eddyb) these are debugging options that used to be env vars
+        // (for more information see `docs/src/codegen-args.md`).
+        opts.optopt(
             "",
+            "dump-mir",
+            "dump every MIR body codegen sees, to files in DIR",
+            "DIR",
+        );
+        opts.optopt(
+            "",
+            "dump-module-on-panic",
+            "if codegen panics, dump the (partially) emitted module, to FILE",
+            "FILE",
+        );
+        opts.optopt(
+            "",
+            "dump-pre-link",
+            "dump all input modules to the linker, to files in DIR",
+            "DIR",
+        );
+        opts.optopt(
+            "",
+            "dump-post-link",
+            "dump all output modules from the linker, to files in DIR",
+            "DIR",
         );
 
         let matches = opts.parse(args)?;
+
+        let help_flag_positions: BTreeSet<_> = ["h", "help"]
+            .iter()
+            .flat_map(|&name| matches.opt_positions(name))
+            .collect();
+        if !help_flag_positions.is_empty() {
+            // HACK(eddyb) this tries to be a bit nicer to end-users, when they
+            // use `spirv-builder` (and so the `RUSTGPU_CODEGEN_ARGS` env var,
+            // to set codegen args), as mentioning `-Cllvm-args` is suboptimal.
+            let spirv_builder_env_var = "RUSTGPU_CODEGEN_ARGS";
+            let help_flag_comes_from_spirv_builder_env_var = std::env::var(spirv_builder_env_var)
+                .ok()
+                .and_then(|args_from_env| {
+                    let args_from_env: Vec<_> = args_from_env.split_whitespace().collect();
+                    if args_from_env.is_empty() {
+                        return None;
+                    }
+
+                    // HACK(eddyb) this may be a bit inefficient but we want to
+                    // make sure that *at least one* of the `-h`/`--help` flags
+                    // came from the `spirv-builder`-supported env var *and*
+                    // that the env var's contents are fully contained in the
+                    // `-C llvm-args` this `rustc` invocation is seeing.
+                    args.windows(args_from_env.len())
+                        .enumerate()
+                        .filter(|&(_, w)| w == args_from_env)
+                        .map(|(w_start, w)| w_start..w_start + w.len())
+                        .flat_map(|w_range| help_flag_positions.range(w_range))
+                        .next()
+                })
+                .is_some();
+            let codegen_args_lhs = if help_flag_comes_from_spirv_builder_env_var {
+                spirv_builder_env_var
+            } else {
+                "rustc -Cllvm-args"
+            };
+            println!(
+                "{}",
+                opts.usage(&format!(
+                    "Usage: {codegen_args_lhs}=\"...\" with `...` from:"
+                ))
+            );
+            // HACK(eddyb) this avoids `Cargo` continuing after the message is printed.
+            std::process::exit(1);
+        }
+
         let module_output_type =
             matches.opt_get_default("module-output", ModuleOutputType::Single)?;
         let disassemble = matches.opt_present("disassemble");
@@ -309,12 +479,18 @@ impl CodegenArgs {
 
         let spirv_metadata = matches.opt_str("spirv-metadata");
 
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        let run_spirv_val = !matches.opt_present("no-spirv-val");
+
         let relax_struct_store = matches.opt_present("relax-struct-store");
         let relax_logical_pointer = matches.opt_present("relax-logical-pointer");
         let relax_block_layout = matches.opt_present("relax-block-layout");
         let uniform_buffer_standard_layout = matches.opt_present("uniform-buffer-standard-layout");
         let scalar_block_layout = matches.opt_present("scalar-block-layout");
         let skip_block_layout = matches.opt_present("skip-block-layout");
+
+        // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+        let run_spirv_opt = !matches.opt_present("no-spirv-opt");
 
         let preserve_bindings = matches.opt_present("preserve-bindings");
 
@@ -331,6 +507,40 @@ impl CodegenArgs {
             }
         };
 
+        let matches_opt_path = |name| matches.opt_str(name).map(PathBuf::from);
+        let matches_opt_dump_dir_path = |name| {
+            matches_opt_path(name).map(|path| {
+                if path.is_file() {
+                    std::fs::remove_file(&path).unwrap();
+                }
+                std::fs::create_dir_all(&path).unwrap();
+                path
+            })
+        };
+        // FIXME(eddyb) should these be handled as `-C linker-args="..."` instead?
+        let linker_opts = crate::linker::Options {
+            // FIXME(eddyb) clean up this `no-` "negation prefix" situation.
+            dce: !matches.opt_present("no-dce"),
+            compact_ids: !matches.opt_present("no-compact-ids"),
+            structurize: !matches.opt_present("no-structurize"),
+            spirt: matches.opt_present("spirt"),
+
+            // FIXME(eddyb) deduplicate between `CodegenArgs` and `linker::Options`.
+            emit_multiple_modules: module_output_type == ModuleOutputType::Multiple,
+            spirv_metadata,
+            keep_link_exports: false,
+
+            // NOTE(eddyb) these are debugging options that used to be env vars
+            // (for more information see `docs/src/codegen-args.md`).
+            dump_post_merge: matches_opt_dump_dir_path("dump-post-merge"),
+            dump_post_split: matches_opt_dump_dir_path("dump-post-split"),
+            dump_spirt_passes: matches_opt_dump_dir_path("dump-spirt-passes"),
+            specializer_debug: matches.opt_present("specializer-debug"),
+            specializer_dump_instances: matches_opt_path("specializer-dump-instances"),
+            print_all_zombie: matches.opt_present("print-all-zombie"),
+            print_zombie: matches.opt_present("print-zombie"),
+        };
+
         Ok(Self {
             module_output_type,
             disassemble,
@@ -340,6 +550,8 @@ impl CodegenArgs {
 
             spirv_metadata,
 
+            run_spirv_val,
+
             relax_struct_store,
             relax_logical_pointer,
             relax_block_layout,
@@ -347,7 +559,18 @@ impl CodegenArgs {
             scalar_block_layout,
             skip_block_layout,
 
+            run_spirv_opt,
+
             preserve_bindings,
+
+            linker_opts,
+
+            // NOTE(eddyb) these are debugging options that used to be env vars
+            // (for more information see `docs/src/codegen-args.md`).
+            dump_mir: matches_opt_dump_dir_path("dump-mir"),
+            dump_module_on_panic: matches_opt_path("dump-module-on-panic"),
+            dump_pre_link: matches_opt_dump_dir_path("dump-pre-link"),
+            dump_post_link: matches_opt_dump_dir_path("dump-post-link"),
         })
     }
 
@@ -545,11 +768,10 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         }
         .def(span, self);
 
-        if self.is_system_crate() {
+        if self.is_system_crate(span) {
             // Create these undefs up front instead of on demand in SpirvValue::def because
             // SpirvValue::def can't use cx.emit()
-            self.builder
-                .def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
+            self.def_constant(ty, SpirvConst::ZombieUndefForFnAddr);
         }
 
         SpirvValue {
@@ -572,27 +794,11 @@ impl<'tcx> MiscMethods<'tcx> for CodegenCx<'tcx> {
         self.codegen_unit
     }
 
-    fn used_statics(&self) -> &RefCell<Vec<Self::Value>> {
-        todo!()
-    }
-
-    fn compiler_used_statics(&self) -> &RefCell<Vec<Self::Value>> {
-        todo!()
-    }
-
     fn set_frame_pointer_type(&self, _llfn: Self::Function) {
         todo!()
     }
 
     fn apply_target_cpu_attr(&self, _llfn: Self::Function) {
-        todo!()
-    }
-
-    fn create_used_variable(&self) {
-        todo!()
-    }
-
-    fn create_compiler_used_variable(&self) {
         todo!()
     }
 
@@ -671,11 +877,11 @@ impl<'tcx> CoverageInfoMethods<'tcx> for CodegenCx<'tcx> {
     }
 }
 
-impl<'tcx> AsmMethods for CodegenCx<'tcx> {
+impl<'tcx> AsmMethods<'tcx> for CodegenCx<'tcx> {
     fn codegen_global_asm(
         &self,
         _template: &[InlineAsmTemplatePiece],
-        _operands: &[GlobalAsmOperandRef],
+        _operands: &[GlobalAsmOperandRef<'tcx>],
         _options: InlineAsmOptions,
         _line_spans: &[Span],
     ) {

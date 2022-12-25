@@ -89,7 +89,6 @@ pub enum SpirvAttribute {
     InputAttachmentIndex(u32),
 
     // `fn`/closure attributes:
-    UnrollLoops,
     BufferLoadIntrinsic,
     BufferStoreIntrinsic,
 }
@@ -124,7 +123,6 @@ pub struct AggregatedSpirvAttributes {
     pub input_attachment_index: Option<Spanned<u32>>,
 
     // `fn`/closure attributes:
-    pub unroll_loops: Option<Spanned<()>>,
     pub buffer_load_intrinsic: Option<Spanned<()>>,
     pub buffer_store_intrinsic: Option<Spanned<()>>,
 }
@@ -148,7 +146,7 @@ impl AggregatedSpirvAttributes {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
-                    cx.tcx.sess.delay_span_bug(span, &msg);
+                    cx.tcx.sess.delay_span_bug(span, msg);
                     continue;
                 }
             };
@@ -160,7 +158,7 @@ impl AggregatedSpirvAttributes {
                 }) => {
                     cx.tcx
                         .sess
-                        .delay_span_bug(span, &format!("multiple {} attributes", category));
+                        .delay_span_bug(span, format!("multiple {} attributes", category));
                 }
             }
         }
@@ -213,7 +211,6 @@ impl AggregatedSpirvAttributes {
                 span,
                 "#[spirv(attachment_index)]",
             ),
-            UnrollLoops => try_insert(&mut self.unroll_loops, (), span, "#[spirv(unroll_loops)]"),
             BufferLoadIntrinsic => try_insert(
                 &mut self.buffer_load_intrinsic,
                 (),
@@ -235,8 +232,8 @@ fn target_from_impl_item<'tcx>(tcx: TyCtxt<'tcx>, impl_item: &hir::ImplItem<'_>)
     match impl_item.kind {
         hir::ImplItemKind::Const(..) => Target::AssocConst,
         hir::ImplItemKind::Fn(..) => {
-            let parent_local_def_id = tcx.hir().get_parent_item(impl_item.hir_id());
-            let containing_item = tcx.hir().expect_item(parent_local_def_id);
+            let parent_owner_id = tcx.hir().get_parent_item(impl_item.hir_id());
+            let containing_item = tcx.hir().expect_item(parent_owner_id.def_id);
             let containing_impl_is_for_trait = match &containing_item.kind {
                 hir::ItemKind::Impl(hir::Impl { of_trait, .. }) => of_trait.is_some(),
                 _ => unreachable!("parent of an ImplItem must be an Impl"),
@@ -247,7 +244,7 @@ fn target_from_impl_item<'tcx>(tcx: TyCtxt<'tcx>, impl_item: &hir::ImplItem<'_>)
                 Target::Method(MethodKind::Inherent)
             }
         }
-        hir::ImplItemKind::TyAlias(..) => Target::AssocTy,
+        hir::ImplItemKind::Type(..) => Target::AssocTy,
     }
 }
 
@@ -267,7 +264,7 @@ impl CheckSpirvAttrVisitor<'_> {
             let (span, parsed_attr) = match parse_attr_result {
                 Ok(span_and_parsed_attr) => span_and_parsed_attr,
                 Err((span, msg)) => {
-                    self.tcx.sess.span_err(span, &msg);
+                    self.tcx.sess.span_err(span, msg);
                     continue;
                 }
             };
@@ -336,7 +333,7 @@ impl CheckSpirvAttrVisitor<'_> {
                                 if let Err(msg) = valid {
                                     self.tcx.sess.span_err(
                                         span,
-                                        &format!("`{:?}` storage class {}", storage_class, msg),
+                                        format!("`{:?}` storage class {}", storage_class, msg),
                                     );
                                 }
                             }
@@ -345,15 +342,6 @@ impl CheckSpirvAttrVisitor<'_> {
                     }
 
                     _ => Err(Expected("function parameter")),
-                },
-                SpirvAttribute::UnrollLoops => match target {
-                    Target::Fn
-                    | Target::Closure
-                    | Target::Method(MethodKind::Trait { body: true } | MethodKind::Inherent) => {
-                        Ok(())
-                    }
-
-                    _ => Err(Expected("function or closure")),
                 },
                 SpirvAttribute::BufferLoadIntrinsic | SpirvAttribute::BufferStoreIntrinsic => {
                     match target {
@@ -366,7 +354,7 @@ impl CheckSpirvAttrVisitor<'_> {
                 Err(Expected(expected_target)) => {
                     self.tcx.sess.span_err(
                         span,
-                        &format!(
+                        format!(
                             "attribute is only valid on a {}, not on a {}",
                             expected_target, target
                         ),
@@ -464,7 +452,7 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
 
     fn visit_expr(&mut self, expr: &'tcx hir::Expr<'tcx>) {
         let target = match expr.kind {
-            hir::ExprKind::Closure(..) => Target::Closure,
+            hir::ExprKind::Closure { .. } => Target::Closure,
             _ => Target::Expression,
         };
 
@@ -472,14 +460,9 @@ impl<'tcx> Visitor<'tcx> for CheckSpirvAttrVisitor<'tcx> {
         intravisit::walk_expr(self, expr);
     }
 
-    fn visit_variant(
-        &mut self,
-        variant: &'tcx hir::Variant<'tcx>,
-        generics: &'tcx hir::Generics<'tcx>,
-        item_id: HirId,
-    ) {
+    fn visit_variant(&mut self, variant: &'tcx hir::Variant<'tcx>) {
         self.check_spirv_attributes(variant.id, Target::Variant);
-        intravisit::walk_variant(self, variant, generics, item_id);
+        intravisit::walk_variant(self, variant);
     }
 
     fn visit_param(&mut self, param: &'tcx hir::Param<'tcx>) {
@@ -495,10 +478,8 @@ fn check_mod_attrs(tcx: TyCtxt<'_>, module_def_id: LocalDefId) {
         tcx,
         sym: Symbols::get(),
     };
-    tcx.hir().visit_item_likes_in_module(
-        module_def_id,
-        &mut check_spirv_attr_visitor.as_deep_visitor(),
-    );
+    tcx.hir()
+        .visit_item_likes_in_module(module_def_id, check_spirv_attr_visitor);
     if module_def_id.is_top_level_module() {
         check_spirv_attr_visitor.check_spirv_attributes(CRATE_HIR_ID, Target::Mod);
     }

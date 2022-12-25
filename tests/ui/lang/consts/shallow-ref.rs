@@ -3,24 +3,19 @@
 
 // build-pass
 
-use spirv_std as _;
+use spirv_std::spirv;
 
-use glam::{const_mat2, Mat2, Vec2};
+use glam::{Mat2, Vec2};
 
 #[inline(never)]
 fn scalar_load(r: &'static u32) -> u32 {
     *r
 }
 
-const ROT90: Mat2 = const_mat2![[0.0, 1.0], [-1.0, 0.0]];
+const ROT90: Mat2 = Mat2::from_cols_array_2d(&[[0.0, 1.0], [-1.0, 0.0]]);
 
 #[spirv(fragment)]
-pub fn main(
-    #[spirv(flat)] scalar_out: &mut u32,
-    vec_in: Vec2,
-    #[spirv(flat)] bool_out: &mut u32,
-    vec_out: &mut Vec2,
-) {
+pub fn main(scalar_out: &mut u32, vec_in: Vec2, bool_out: &mut u32, vec_out: &mut Vec2) {
     *scalar_out = scalar_load(&123);
     *bool_out = (vec_in == Vec2::ZERO) as u32;
     *vec_out = ROT90.transpose() * vec_in;

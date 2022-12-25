@@ -1,13 +1,14 @@
 use super::Result;
+use crate::decorations::{CustomDecoration, ZombieDecoration};
 use rspirv::dr::{Instruction, Module};
 use rspirv::spirv::{Capability, Decoration, LinkageType, Op, Word};
 use rustc_data_structures::fx::{FxHashMap, FxHashSet};
 use rustc_session::Session;
 
-pub fn run(sess: &Session, module: &mut Module) -> Result<()> {
+pub fn run(opts: &super::Options, sess: &Session, module: &mut Module) -> Result<()> {
     let (rewrite_rules, killed_parameters) =
         find_import_export_pairs_and_killed_params(sess, module)?;
-    kill_linkage_instructions(module, &rewrite_rules);
+    kill_linkage_instructions(opts, module, &rewrite_rules);
     import_kill_annotations_and_debug(module, &rewrite_rules, &killed_parameters);
     replace_all_uses_with(module, &rewrite_rules);
     Ok(())
@@ -26,6 +27,27 @@ fn find_import_export_pairs_and_killed_params(
     let mut rewrite_rules = FxHashMap::default();
     let mut killed_parameters = FxHashSet::default();
 
+    // HACK(eddyb) collect all zombies, and anything that transitively mentions
+    // them (or is "infected"), to ignore them when doing type checks, as they
+    // will either be removed later, or become an error of their own.
+    let mut zombie_infected: FxHashSet<Word> = ZombieDecoration::decode_all(module)
+        .map(|(z, _)| z)
+        .collect();
+    for inst in module.global_inst_iter() {
+        if let Some(result_id) = inst.result_id {
+            if !zombie_infected.contains(&result_id) {
+                let mut id_operands = inst.operands.iter().filter_map(|o| o.id_ref_any());
+                // NOTE(eddyb) this takes advantage of the fact that the module
+                // is ordered def-before-use (with the minor exception of forward
+                // references for recursive data, which are not fully supported),
+                // to be able to propagate "zombie infection" in one pass.
+                if id_operands.any(|id| zombie_infected.contains(&id)) {
+                    zombie_infected.insert(result_id);
+                }
+            }
+        }
+    }
+
     // First, collect all the exports.
     for annotation in &module.annotations {
         let (id, name) = match get_linkage_inst(annotation) {
@@ -34,7 +56,7 @@ fn find_import_export_pairs_and_killed_params(
         };
         let type_id = *type_map.get(&id).expect("Unexpected op");
         if exports.insert(name, (id, type_id)).is_some() {
-            return Err(sess.err(&format!("Multiple exports found for {:?}", name)));
+            return Err(sess.err(format!("Multiple exports found for {:?}", name)));
         }
     }
     let mut any_err = None;
@@ -46,14 +68,21 @@ fn find_import_export_pairs_and_killed_params(
         };
         let (export_id, export_type) = match exports.get(name) {
             None => {
-                any_err = Some(sess.err(&format!("Unresolved symbol {:?}", name)));
+                any_err = Some(sess.err(format!("Unresolved symbol {:?}", name)));
                 continue;
             }
             Some(&x) => x,
         };
         let import_type = *type_map.get(&import_id).expect("Unexpected op");
         // Make sure the import/export pair has the same type.
-        check_tys_equal(sess, module, name, import_type, export_type)?;
+        check_tys_equal(
+            sess,
+            module,
+            name,
+            import_type,
+            export_type,
+            &zombie_infected,
+        )?;
         rewrite_rules.insert(import_id, export_id);
         if let Some(params) = fn_parameters.get(&import_id) {
             for &param in params {
@@ -111,8 +140,17 @@ fn check_tys_equal(
     name: &str,
     import_type: Word,
     export_type: Word,
+    zombie_infected: &FxHashSet<Word>,
 ) -> Result<()> {
-    if import_type == export_type {
+    let allowed = import_type == export_type || {
+        // HACK(eddyb) zombies can cause types to differ in definition, due to
+        // requiring multiple different instances (usually different `Span`s),
+        // so we ignore them, as `find_import_export_pairs_and_killed_params`'s
+        // own comment explains (zombies will cause errors or be removed, *later*).
+        zombie_infected.contains(&import_type) && zombie_infected.contains(&export_type)
+    };
+
+    if allowed {
         Ok(())
     } else {
         // We have an error. It's okay to do something really slow now to report the error.
@@ -177,7 +215,11 @@ fn replace_all_uses_with(module: &mut Module, rules: &FxHashMap<u32, u32>) {
     });
 }
 
-fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &FxHashMap<u32, u32>) {
+fn kill_linkage_instructions(
+    opts: &super::Options,
+    module: &mut Module,
+    rewrite_rules: &FxHashMap<u32, u32>,
+) {
     // drop imported functions
     module
         .functions
@@ -189,16 +231,27 @@ fn kill_linkage_instructions(module: &mut Module, rewrite_rules: &FxHashMap<u32,
             .map_or(true, |v| !rewrite_rules.contains_key(&v))
     });
 
+    // NOTE(eddyb) `Options`'s `keep_link_export`s field requests that `Export`s
+    // are left in (primarily for unit testing - see also its doc comment).
+    let mut kept_any_linkage_decorations = false;
     module.annotations.retain(|inst| {
-        inst.class.opcode != Op::Decorate
-            || inst.operands[1].unwrap_decoration() != Decoration::LinkageAttributes
+        !(inst.class.opcode == Op::Decorate
+            && inst.operands[1].unwrap_decoration() == Decoration::LinkageAttributes
+            && match inst.operands[3].unwrap_linkage_type() {
+                LinkageType::Export if opts.keep_link_exports => {
+                    kept_any_linkage_decorations = true;
+                    false
+                }
+                _ => true,
+            })
     });
-
-    // drop OpCapability Linkage
-    module.capabilities.retain(|inst| {
-        inst.class.opcode != Op::Capability
-            || inst.operands[0].unwrap_capability() != Capability::Linkage
-    });
+    if !kept_any_linkage_decorations {
+        // drop OpCapability Linkage
+        module.capabilities.retain(|inst| {
+            inst.class.opcode != Op::Capability
+                || inst.operands[0].unwrap_capability() != Capability::Linkage
+        });
+    }
 }
 
 fn import_kill_annotations_and_debug(

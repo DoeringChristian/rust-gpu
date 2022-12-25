@@ -1,23 +1,25 @@
-use super::{link, LinkResult, Options};
-use crate::codegen_cx::SpirvMetadata;
+use super::{link, LinkResult};
 use pipe::pipe;
 use rspirv::dr::{Loader, Module};
-use rustc_driver::handle_options;
 use rustc_errors::registry::Registry;
-use rustc_session::config::build_session_options;
-use rustc_session::config::Input;
-use rustc_session::DiagnosticOutput;
 use std::io::Read;
-use std::path::PathBuf;
 
 // https://github.com/colin-kiegel/rust-pretty-assertions/issues/24
 #[derive(PartialEq, Eq)]
-#[doc(hidden)]
-pub struct PrettyString<'a>(pub &'a str);
-/// Make diff to display string as multi-line string
-impl<'a> std::fmt::Debug for PrettyString<'a> {
+struct PrettyString(String);
+impl std::fmt::Debug for PrettyString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.0)
+        // HACK(eddyb) add extra newlines for readability when it shows up
+        // in `Result::unwrap` panic messages specifically.
+        f.write_str("\n")?;
+        f.write_str(self)?;
+        f.write_str("\n")
+    }
+}
+impl std::ops::Deref for PrettyString {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.0
     }
 }
 
@@ -47,73 +49,164 @@ fn validate(spirv: &[u32]) {
 
 fn load(bytes: &[u8]) -> Module {
     let mut loader = Loader::new();
-    rspirv::binary::parse_bytes(&bytes, &mut loader).unwrap();
+    rspirv::binary::parse_bytes(bytes, &mut loader).unwrap();
     loader.module()
 }
 
-fn assemble_and_link(binaries: &[&[u8]]) -> Result<Module, String> {
+struct TestLinkOutputs {
+    // Old output, equivalent to not passing `--spirt` in codegen args.
+    without_spirt: Module,
+
+    // New output, equivalent to passing `--spirt` in codegen args.
+    with_spirt: Module,
+}
+
+// FIXME(eddyb) shouldn't this be named just `link`? (`assemble_spirv` is separate)
+fn assemble_and_link(binaries: &[&[u8]]) -> Result<TestLinkOutputs, PrettyString> {
+    let link_with_spirt = |spirt: bool| {
+        link_with_linker_opts(
+            binaries,
+            &crate::linker::Options {
+                compact_ids: true,
+                dce: true,
+                keep_link_exports: true,
+                spirt,
+                ..Default::default()
+            },
+        )
+    };
+    match [link_with_spirt(false), link_with_spirt(true)] {
+        [Ok(without_spirt), Ok(with_spirt)] => Ok(TestLinkOutputs {
+            without_spirt,
+            with_spirt,
+        }),
+
+        [Err(without_spirt), Err(with_spirt)] if without_spirt == with_spirt => Err(without_spirt),
+
+        // Different error, or only one side errored.
+        [without_spirt, with_spirt] => {
+            let pretty = |result: Result<Module, _>| {
+                result.map(|m| {
+                    use rspirv::binary::Disassemble;
+                    PrettyString(m.disassemble())
+                })
+            };
+            // HACK(eddyb) using `assert_eq!` to dump the different `Result`s.
+            assert_eq!(pretty(without_spirt), pretty(with_spirt));
+            unreachable!();
+        }
+    }
+}
+
+fn link_with_linker_opts(
+    binaries: &[&[u8]],
+    opts: &crate::linker::Options,
+) -> Result<Module, PrettyString> {
     let modules = binaries.iter().cloned().map(load).collect::<Vec<_>>();
 
-    // need pipe here because Config takes ownership of the writer, and the writer must be 'static.
+    // FIXME(eddyb) this seems ridiculous, we should be able to write to
+    // some kind of `Arc<Mutex<Vec<u8>>>` without a separate thread.
+    //
+    // need pipe here because the writer must be 'static.
     let (mut read_diags, write_diags) = pipe();
-    let thread = std::thread::spawn(move || {
+    let read_diags_thread = std::thread::spawn(move || {
         // must spawn thread because pipe crate is synchronous
         let mut diags = String::new();
         read_diags.read_to_string(&mut diags).unwrap();
-        let suffix = "\n\nerror: aborting due to previous error\n\n";
-        if diags.ends_with(suffix) {
-            diags.truncate(diags.len() - suffix.len());
+        if let Some(diags_without_trailing_newlines) = diags.strip_suffix("\n\n") {
+            diags.truncate(diags_without_trailing_newlines.len());
         }
         diags
     });
-    let matches = handle_options(&["".to_string(), "x.rs".to_string()]).unwrap();
-    let sopts = build_session_options(&matches);
-    let config = rustc_interface::Config {
-        opts: sopts,
-        crate_cfg: Default::default(),
-        crate_check_cfg: Default::default(),
-        input: Input::File(PathBuf::new()),
-        input_path: None,
-        output_file: None,
-        output_dir: None,
-        file_loader: None,
-        diagnostic_output: DiagnosticOutput::Raw(Box::new(write_diags)),
-        lint_caps: Default::default(),
-        parse_sess_created: None,
-        register_lints: None,
-        override_queries: None,
-        make_codegen_backend: None,
-        registry: Registry::new(&[]),
-    };
-    rustc_interface::interface::run_compiler(config, |compiler| {
-        let res = link(
-            compiler.session(),
-            modules,
-            &Options {
-                compact_ids: true,
-                dce: false,
-                structurize: false,
-                emit_multiple_modules: false,
-                spirv_metadata: SpirvMetadata::None,
-            },
-        );
-        assert_eq!(compiler.session().has_errors(), res.as_ref().err().copied());
-        res.map(|res| match res {
-            LinkResult::SingleModule(m) => *m,
-            LinkResult::MultipleModules(_) => unreachable!(),
+
+    // NOTE(eddyb) without `catch_fatal_errors`, you'd get the really strange
+    // effect of test failures with no output (because the `FatalError` "panic"
+    // is really a silent unwinding device, that should be treated the same as
+    // `Err(ErrorGuaranteed)` returns from `link`).
+    rustc_driver::catch_fatal_errors(|| {
+        let matches = rustc_driver::handle_options(&["".to_string(), "x.rs".to_string()]).unwrap();
+        let sopts = rustc_session::config::build_session_options(&matches);
+
+        rustc_span::create_session_globals_then(sopts.edition, || {
+            let mut sess = rustc_session::build_session(
+                sopts,
+                None,
+                None,
+                Registry::new(&[]),
+                Default::default(),
+                None,
+                None,
+            );
+
+            // HACK(eddyb) inject `write_diags` into `sess`, to work around
+            // the removals in https://github.com/rust-lang/rust/pull/102992.
+            sess.parse_sess.span_diagnostic = {
+                let fallback_bundle = {
+                    extern crate rustc_error_messages;
+                    rustc_error_messages::fallback_fluent_bundle(
+                        rustc_errors::DEFAULT_LOCALE_RESOURCES,
+                        sess.opts.unstable_opts.translate_directionality_markers,
+                    )
+                };
+                let emitter = rustc_errors::emitter::EmitterWriter::new(
+                    Box::new(write_diags),
+                    Some(sess.parse_sess.clone_source_map()),
+                    None,
+                    fallback_bundle,
+                    false,
+                    false,
+                    false,
+                    None,
+                    false,
+                );
+
+                rustc_errors::Handler::with_emitter_and_flags(
+                    Box::new(emitter),
+                    sess.opts.unstable_opts.diagnostic_handler_flags(true),
+                )
+            };
+
+            let res = link(&sess, modules, opts, Default::default());
+            assert_eq!(sess.has_errors(), res.as_ref().err().copied());
+            res.map(|res| match res {
+                LinkResult::SingleModule(m) => *m,
+                LinkResult::MultipleModules { .. } => unreachable!(),
+            })
         })
     })
-    .map_err(|_e| thread.join().unwrap())
+    .flatten()
+    .map_err(|_e| read_diags_thread.join().unwrap())
+    .map_err(PrettyString)
 }
 
-fn without_header_eq(mut result: Module, expected: &str) {
-    use rspirv::binary::Disassemble;
-    //use rspirv::binary::Assemble;
+#[track_caller]
+fn without_header_eq(outputs: TestLinkOutputs, expected: &str) {
+    let result = {
+        let disasm = |mut result: Module| {
+            use rspirv::binary::Disassemble;
+            //use rspirv::binary::Assemble;
 
-    // validate(&result.assemble());
+            // validate(&result.assemble());
 
-    result.header = None;
-    let result = result.disassemble();
+            result.header = None;
+            result.disassemble()
+        };
+        let [without_spirt, with_spirt] =
+            [disasm(outputs.without_spirt), disasm(outputs.with_spirt)];
+
+        // HACK(eddyb) merge the two outputs into a single "dump".
+        if without_spirt == with_spirt {
+            without_spirt
+        } else {
+            format!(
+                "=== without SPIR-T ===\n\
+                 {without_spirt}\n\
+                 \n\
+                 ===   with  SPIR-T ===\n\
+                 {with_spirt}"
+            )
+        }
+    };
 
     let expected = expected
         .split('\n')
@@ -134,15 +227,18 @@ fn without_header_eq(mut result: Module, expected: &str) {
             \n\
             \n{}\
             \n",
-            pretty_assertions::Comparison::new(&PrettyString(&expected), &PrettyString(&result))
+            pretty_assertions::Comparison::new(&PrettyString(expected), &PrettyString(result))
         );
     }
 }
 
 #[test]
 fn standard() {
+    // FIXME(eddyb) the `Input` `OpVariable` is completely unused and after
+    // enabling DCE, it started being removed, is it necessary at all?
     let a = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Import
         %2 = OpTypeFloat 32
         %1 = OpVariable %2 Uniform
@@ -151,6 +247,7 @@ fn standard() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Export
         %2 = OpTypeFloat 32
         %3 = OpConstant %2 42
@@ -159,10 +256,12 @@ fn standard() {
     );
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
-    let expect = r#"%1 = OpTypeFloat 32
-        %2 = OpVariable %1 Input
-        %3 = OpConstant %1 42.0
-        %4 = OpVariable %1 Uniform %3"#;
+    let expect = r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
+        OpDecorate %1 LinkageAttributes "foo" Export
+        %2 = OpTypeFloat 32
+        %3 = OpConstant %2 42.0
+        %1 = OpVariable %2 Uniform %3"#;
 
     without_header_eq(result, expect);
 }
@@ -171,14 +270,18 @@ fn standard() {
 fn not_a_lib_extra_exports() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform"#,
     );
 
     let result = assemble_and_link(&[&a]).unwrap();
-    let expect = r#"%1 = OpTypeFloat 32
-        %2 = OpVariable %1 Uniform"#;
+    let expect = r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
+        OpDecorate %1 LinkageAttributes "foo" Export
+        %2 = OpTypeFloat 32
+        %1 = OpVariable %2 Uniform"#;
     without_header_eq(result, expect);
 }
 
@@ -186,12 +289,16 @@ fn not_a_lib_extra_exports() {
 fn unresolved_symbol() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform"#,
     );
 
-    let b = assemble_spirv("OpCapability Linkage");
+    let b = assemble_spirv(
+        "OpCapability Linkage
+        OpMemoryModel Logical OpenCL",
+    );
 
     let result = assemble_and_link(&[&a, &b]);
 
@@ -205,6 +312,7 @@ fn unresolved_symbol() {
 fn type_mismatch() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
@@ -213,6 +321,7 @@ fn type_mismatch() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeInt 32 0
             %3 = OpConstant %2 42
@@ -231,6 +340,7 @@ fn type_mismatch() {
 fn multiple_definitions() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
@@ -240,6 +350,7 @@ fn multiple_definitions() {
     let b = assemble_spirv(
         r#"OpCapability Linkage
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 42
@@ -248,6 +359,7 @@ fn multiple_definitions() {
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 -1
@@ -265,6 +377,7 @@ fn multiple_definitions() {
 fn multiple_definitions_different_types() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeFloat 32
             %1 = OpVariable %2 Uniform
@@ -274,6 +387,7 @@ fn multiple_definitions_different_types() {
     let b = assemble_spirv(
         r#"OpCapability Linkage
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeInt 32 0
             %3 = OpConstant %2 42
@@ -282,6 +396,7 @@ fn multiple_definitions_different_types() {
 
     let c = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeFloat 32
             %3 = OpConstant %2 12
@@ -300,6 +415,7 @@ fn multiple_definitions_different_types() {
 fn decoration_mismatch() {
     let a = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Import
         OpDecorate %2 Constant
         %2 = OpTypeFloat 32
@@ -309,6 +425,7 @@ fn decoration_mismatch() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 LinkageAttributes "foo" Export
         %2 = OpTypeFloat 32
         %3 = OpConstant %2 42
@@ -325,8 +442,11 @@ fn decoration_mismatch() {
 
 #[test]
 fn func_ctrl() {
+    // FIXME(eddyb) the `Uniform` `OpVariable` is completely unused and after
+    // enabling DCE, it started being removed, is it necessary at all?
     let a = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
             %2 = OpTypeVoid
             %3 = OpTypeFunction %2
@@ -338,6 +458,7 @@ fn func_ctrl() {
 
     let b = assemble_spirv(
         r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             %2 = OpTypeVoid
             %3 = OpTypeFunction %2
@@ -349,12 +470,13 @@ fn func_ctrl() {
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
-    let expect = r#"%1 = OpTypeVoid
-            %2 = OpTypeFunction %1
-            %3 = OpTypeFloat 32
-            %4 = OpVariable %3 Uniform
-            %5 = OpFunction %1 DontInline %2
-            %6 = OpLabel
+    let expect = r#"OpCapability Linkage
+            OpMemoryModel Logical OpenCL
+            OpDecorate %1 LinkageAttributes "foo" Export
+            %2 = OpTypeVoid
+            %3 = OpTypeFunction %2
+            %1 = OpFunction %2 DontInline %3
+            %4 = OpLabel
             OpReturn
             OpFunctionEnd"#;
 
@@ -363,13 +485,15 @@ fn func_ctrl() {
 
 #[test]
 fn use_exported_func_param_attr() {
+    // HACK(eddyb) this keeps an otherwise-dead `OpFunction` alive w/ an `Export`.
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Import
-            OpDecorate %2 FuncParamAttr Zext
-            %2 = OpDecorationGroup
-            OpGroupDecorate %2 %3 %4
+            OpDecorate %3 FuncParamAttr Zext
+            OpDecorate %4 FuncParamAttr Zext
+            OpDecorate %8 LinkageAttributes "HACK(eddyb) keep function alive" Export
             %5 = OpTypeVoid
             %6 = OpTypeInt 32 0
             %7 = OpTypeFunction %5 %6
@@ -388,6 +512,7 @@ fn use_exported_func_param_attr() {
     let b = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpDecorate %1 LinkageAttributes "foo" Export
             OpDecorate %2 FuncParamAttr Sext
             %3 = OpTypeVoid
@@ -404,24 +529,51 @@ fn use_exported_func_param_attr() {
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
-    let expect = r#"OpCapability Kernel
+    let expect = r#"=== without SPIR-T ===
+        OpCapability Kernel
+        OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpDecorate %1 FuncParamAttr Zext
-        %1 = OpDecorationGroup
-        OpGroupDecorate %1 %2
-        OpDecorate %3 FuncParamAttr Sext
-        %4 = OpTypeVoid
-        %5 = OpTypeInt 32 0
-        %6 = OpTypeFunction %4 %5
-        %7 = OpFunction %4 None %6
-        %2 = OpFunctionParameter %5
+        OpDecorate %2 LinkageAttributes "HACK(eddyb) keep function alive" Export
+        OpDecorate %3 LinkageAttributes "foo" Export
+        OpDecorate %4 FuncParamAttr Sext
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypeFunction %5 %6
+        %2 = OpFunction %5 None %7
+        %1 = OpFunctionParameter %6
         %8 = OpLabel
-        %9 = OpLoad %5 %2
+        %9 = OpLoad %6 %1
         OpReturn
         OpFunctionEnd
-        %10 = OpFunction %4 None %6
-        %3 = OpFunctionParameter %5
-        %11 = OpLabel
-        %12 = OpLoad %5 %3
+        %3 = OpFunction %5 None %7
+        %4 = OpFunctionParameter %6
+        %10 = OpLabel
+        %11 = OpLoad %6 %4
+        OpReturn
+        OpFunctionEnd
+
+        ===  with SPIR-T ===
+        OpCapability Linkage
+        OpCapability Kernel
+        OpMemoryModel Logical OpenCL
+        OpDecorate %1 FuncParamAttr Zext
+        OpDecorate %2 FuncParamAttr Sext
+        OpDecorate %3 LinkageAttributes "HACK(eddyb) keep function alive" Export
+        OpDecorate %4 LinkageAttributes "foo" Export
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypeFunction %5 %6
+        %3 = OpFunction %5 None %7
+        %1 = OpFunctionParameter %6
+        %8 = OpLabel
+        %9 = OpLoad %6 %1
+        OpReturn
+        OpFunctionEnd
+        %4 = OpFunction %5 None %7
+        %2 = OpFunctionParameter %6
+        %10 = OpLabel
+        %11 = OpLoad %6 %2
         OpReturn
         OpFunctionEnd"#;
 
@@ -430,16 +582,18 @@ fn use_exported_func_param_attr() {
 
 #[test]
 fn names_and_decorations() {
+    // HACK(eddyb) this keeps an otherwise-dead `OpFunction` alive w/ an `Export`.
     let a = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpName %1 "foo"
             OpName %3 "param"
             OpDecorate %1 LinkageAttributes "foo" Import
-            OpDecorate %2 Restrict
+            OpDecorate %3 Restrict
+            OpDecorate %4 Restrict
             OpDecorate %4 NonWritable
-            %2 = OpDecorationGroup
-            OpGroupDecorate %2 %3 %4
+            OpDecorate %8 LinkageAttributes "HACK(eddyb) keep function alive" Export
             %5 = OpTypeVoid
             %6 = OpTypeInt 32 0
             %9 = OpTypePointer Function %6
@@ -459,6 +613,7 @@ fn names_and_decorations() {
     let b = assemble_spirv(
         r#"OpCapability Kernel
             OpCapability Linkage
+            OpMemoryModel Logical OpenCL
             OpName %1 "foo"
             OpName %2 "param"
             OpDecorate %1 LinkageAttributes "foo" Export
@@ -478,28 +633,59 @@ fn names_and_decorations() {
 
     let result = assemble_and_link(&[&a, &b]).unwrap();
 
-    let expect = r#"OpCapability Kernel
+    let expect = r#"=== without SPIR-T ===
+        OpCapability Kernel
+        OpCapability Linkage
+        OpMemoryModel Logical OpenCL
         OpName %1 "foo"
         OpName %2 "param"
         OpDecorate %3 Restrict
-        OpDecorate %4 NonWritable
-        %3 = OpDecorationGroup
-        OpGroupDecorate %3 %4
+        OpDecorate %3 NonWritable
+        OpDecorate %4 LinkageAttributes "HACK(eddyb) keep function alive" Export
+        OpDecorate %1 LinkageAttributes "foo" Export
         OpDecorate %2 Restrict
         %5 = OpTypeVoid
         %6 = OpTypeInt 32 0
         %7 = OpTypePointer Function %6
         %8 = OpTypeFunction %5 %7
-        %9 = OpFunction %5 None %8
-        %4 = OpFunctionParameter %7
-        %10 = OpLabel
-        %11 = OpLoad %6 %4
+        %4 = OpFunction %5 None %8
+        %3 = OpFunctionParameter %7
+        %9 = OpLabel
+        %10 = OpLoad %6 %3
         OpReturn
         OpFunctionEnd
         %1 = OpFunction %5 None %8
         %2 = OpFunctionParameter %7
-        %12 = OpLabel
-        %13 = OpLoad %6 %2
+        %11 = OpLabel
+        %12 = OpLoad %6 %2
+        OpReturn
+        OpFunctionEnd
+
+        ===  with SPIR-T ===
+        OpCapability Linkage
+        OpCapability Kernel
+        OpMemoryModel Logical OpenCL
+        OpName %1 "foo"
+        OpName %2 "param"
+        OpDecorate %3 Restrict
+        OpDecorate %3 NonWritable
+        OpDecorate %2 Restrict
+        OpDecorate %4 LinkageAttributes "HACK(eddyb) keep function alive" Export
+        OpDecorate %1 LinkageAttributes "foo" Export
+        %5 = OpTypeVoid
+        %6 = OpTypeInt 32 0
+        %7 = OpTypePointer Function %6
+        %8 = OpTypeFunction %5 %7
+        %4 = OpFunction %5 None %8
+        %3 = OpFunctionParameter %7
+        %9 = OpLabel
+        %10 = OpLoad %6 %3
+        OpReturn
+        OpFunctionEnd
+        %1 = OpFunction %5 None %8
+        %2 = OpFunctionParameter %7
+        %11 = OpLabel
+        %12 = OpLoad %6 %2
         OpReturn
         OpFunctionEnd"#;
 

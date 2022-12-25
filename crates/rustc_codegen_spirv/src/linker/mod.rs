@@ -19,27 +19,55 @@ mod zombies;
 use std::borrow::Cow;
 
 use crate::codegen_cx::SpirvMetadata;
-use crate::decorations::{CustomDecoration, UnrollLoopsDecoration};
+use either::Either;
 use rspirv::binary::{Assemble, Consumer};
 use rspirv::dr::{Block, Instruction, Loader, Module, ModuleHeader, Operand};
 use rspirv::spirv::{Op, StorageClass, Word};
-use rustc_data_structures::fx::{FxHashMap, FxHashSet};
+use rustc_data_structures::fx::FxHashMap;
 use rustc_errors::ErrorGuaranteed;
 use rustc_session::Session;
+use std::collections::BTreeMap;
+use std::ffi::{OsStr, OsString};
+use std::path::PathBuf;
 
 pub type Result<T> = std::result::Result<T, ErrorGuaranteed>;
 
+#[derive(Default)]
 pub struct Options {
     pub compact_ids: bool,
     pub dce: bool,
     pub structurize: bool,
+    pub spirt: bool,
+
     pub emit_multiple_modules: bool,
     pub spirv_metadata: SpirvMetadata,
+
+    /// Whether to preserve `LinkageAttributes "..." Export` decorations,
+    /// even after resolving imports to exports.
+    ///
+    /// **Note**: currently only used for unit testing, and not exposed elsewhere.
+    pub keep_link_exports: bool,
+
+    // NOTE(eddyb) these are debugging options that used to be env vars
+    // (for more information see `docs/src/codegen-args.md`).
+    pub dump_post_merge: Option<PathBuf>,
+    pub dump_post_split: Option<PathBuf>,
+    pub dump_spirt_passes: Option<PathBuf>,
+    pub specializer_debug: bool,
+    pub specializer_dump_instances: Option<PathBuf>,
+    pub print_all_zombie: bool,
+    pub print_zombie: bool,
 }
 
 pub enum LinkResult {
     SingleModule(Box<Module>),
-    MultipleModules(FxHashMap<String, Module>),
+    MultipleModules {
+        /// The "file stem" key is computed from the "entry name" in the value
+        /// (through `sanitize_filename`, replacing invalid chars with `-`),
+        /// but it's used as the map key because it *has to* be unique, even if
+        /// lossy sanitization could have erased distinctions between entry names.
+        file_stem_to_entry_name_and_module: BTreeMap<OsString, (String, Module)>,
+    },
 }
 
 fn id(header: &mut ModuleHeader) -> Word {
@@ -112,7 +140,12 @@ fn get_name<'a>(names: &FxHashMap<Word, &'a str>, id: Word) -> Cow<'a, str> {
     )
 }
 
-pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<LinkResult> {
+pub fn link(
+    sess: &Session,
+    mut inputs: Vec<Module>,
+    opts: &Options,
+    disambiguated_crate_name_for_dumps: &OsStr,
+) -> Result<LinkResult> {
     let mut output = {
         let _timer = sess.timer("link_merge");
         // shift all the ids
@@ -124,10 +157,10 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             bound += module.header.as_ref().unwrap().bound - 1;
             let this_version = module.header.as_ref().unwrap().version();
             if version != this_version {
-                sess.fatal(&format!(
+                return Err(sess.err(format!(
                     "cannot link two modules with different SPIR-V versions: v{}.{} and v{}.{}",
                     version.0, version.1, this_version.0, this_version.1
-                ))
+                )));
             }
         }
 
@@ -148,8 +181,13 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         output
     };
 
-    if let Ok(ref path) = std::env::var("DUMP_POST_MERGE") {
-        std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
+    if let Some(dir) = &opts.dump_post_merge {
+        std::fs::write(
+            dir.join(disambiguated_crate_name_for_dumps)
+                .with_extension("spv"),
+            spirv_tools::binary::from_binary(&output.assemble()),
+        )
+        .unwrap();
     }
 
     // remove duplicates (https://github.com/KhronosGroup/SPIRV-Tools/blob/e7866de4b1dc2a7e8672867caeb0bdca49f458d3/source/opt/remove_duplicates_pass.cpp)
@@ -165,7 +203,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     // find import / export pairs
     {
         let _timer = sess.timer("link_find_pairs");
-        import_export_link::run(sess, &mut output)?;
+        import_export_link::run(opts, sess, &mut output)?;
     }
 
     {
@@ -183,7 +221,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
 
     {
         let _timer = sess.timer("link_remove_zombies");
-        zombies::remove_zombies(sess, &mut output);
+        zombies::remove_zombies(sess, opts, &mut output)?;
     }
 
     {
@@ -195,6 +233,7 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
             simple_passes::block_ordering_pass(func);
         }
         output = specializer::specialize(
+            opts,
             output,
             specializer::SimpleSpecialization {
                 specialize_operand: |operand| {
@@ -216,30 +255,14 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
         );
     }
 
-    {
-        let _timer = sess.timer("link_inline");
-        inline::inline(sess, &mut output)?;
-    }
+    // NOTE(eddyb) with SPIR-T, we can do `mem2reg` before inlining, too!
+    if opts.spirt {
+        if opts.dce {
+            let _timer = sess.timer("link_dce-before-inlining");
+            dce::dce(&mut output);
+        }
 
-    if opts.dce {
-        let _timer = sess.timer("link_dce");
-        dce::dce(&mut output);
-    }
-
-    let unroll_loops_decorations = UnrollLoopsDecoration::decode_all(&output)
-        .map(|(id, _)| id)
-        .collect::<FxHashSet<_>>();
-    UnrollLoopsDecoration::remove_all(&mut output);
-
-    let mut output = if opts.structurize {
-        let _timer = sess.timer("link_structurize");
-        structurizer::structurize(output, unroll_loops_decorations)
-    } else {
-        output
-    };
-
-    {
-        let _timer = sess.timer("link_block_ordering_pass_and_mem2reg");
+        let _timer = sess.timer("link_block_ordering_pass_and_mem2reg-before-inlining");
         let mut pointer_to_pointee = FxHashMap::default();
         let mut constants = FxHashMap::default();
         let mut u32 = None;
@@ -278,6 +301,141 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     }
 
     {
+        let _timer = sess.timer("link_inline");
+        inline::inline(sess, &mut output)?;
+    }
+
+    if opts.dce {
+        let _timer = sess.timer("link_dce-after-inlining");
+        dce::dce(&mut output);
+    }
+
+    let mut output = if opts.structurize && !opts.spirt {
+        let _timer = sess.timer("link_structurize");
+        structurizer::structurize(output)
+    } else {
+        output
+    };
+
+    {
+        let _timer = sess.timer("link_block_ordering_pass_and_mem2reg-after-inlining");
+        let mut pointer_to_pointee = FxHashMap::default();
+        let mut constants = FxHashMap::default();
+        let mut u32 = None;
+        for inst in &output.types_global_values {
+            match inst.class.opcode {
+                Op::TypePointer => {
+                    pointer_to_pointee
+                        .insert(inst.result_id.unwrap(), inst.operands[1].unwrap_id_ref());
+                }
+                Op::TypeInt
+                    if inst.operands[0].unwrap_literal_int32() == 32
+                        && inst.operands[1].unwrap_literal_int32() == 0 =>
+                {
+                    assert!(u32.is_none());
+                    u32 = Some(inst.result_id.unwrap());
+                }
+                Op::Constant if u32.is_some() && inst.result_type == u32 => {
+                    let value = inst.operands[0].unwrap_literal_int32();
+                    constants.insert(inst.result_id.unwrap(), value);
+                }
+                _ => {}
+            }
+        }
+        for func in &mut output.functions {
+            simple_passes::block_ordering_pass(func);
+            // Note: mem2reg requires functions to be in RPO order (i.e. block_ordering_pass)
+            mem2reg::mem2reg(
+                output.header.as_mut().unwrap(),
+                &mut output.types_global_values,
+                &pointer_to_pointee,
+                &constants,
+                func,
+            );
+            destructure_composites::destructure_composites(func);
+        }
+    }
+
+    if opts.spirt {
+        let mut per_pass_module_for_dumping = vec![];
+        let mut after_pass = |pass, module: &spirt::Module| {
+            if opts.dump_spirt_passes.is_some() {
+                per_pass_module_for_dumping.push((pass, module.clone()));
+            }
+        };
+
+        let spv_bytes = {
+            let _timer = sess.timer("assemble-to-spv_bytes-for-spirt");
+            spirv_tools::binary::from_binary(&output.assemble()).to_vec()
+        };
+        let cx = std::rc::Rc::new(spirt::Context::new());
+        let mut module = {
+            let _timer = sess.timer("spirt::Module::lower_from_spv_file");
+            match spirt::Module::lower_from_spv_bytes(cx.clone(), spv_bytes) {
+                Ok(module) => module,
+                Err(e) => {
+                    use rspirv::binary::Disassemble;
+
+                    return Err(sess
+                        .struct_err(format!("{e}"))
+                        .note(format!(
+                            "while lowering this SPIR-V module to SPIR-T:\n{}",
+                            output.disassemble()
+                        ))
+                        .emit());
+                }
+            }
+        };
+        after_pass("lower_from_spv", &module);
+
+        if opts.structurize {
+            {
+                let _timer = sess.timer("spirt::legalize::structurize_func_cfgs");
+                spirt::passes::legalize::structurize_func_cfgs(&mut module);
+            }
+            after_pass("structurize_func_cfgs", &module);
+        }
+
+        // NOTE(eddyb) this should be *before* `lift_to_spv` below,
+        // so if that fails, the dump could be used to debug it.
+        if let Some(dump_dir) = &opts.dump_spirt_passes {
+            let dump_spirt_file_path = dump_dir
+                .join(disambiguated_crate_name_for_dumps)
+                .with_extension("spirt");
+
+            let plan = spirt::print::Plan::for_versions(
+                &cx,
+                per_pass_module_for_dumping
+                    .iter()
+                    .map(|(pass, module)| (format!("after {pass}"), module)),
+            );
+            let pretty = plan.pretty_print();
+
+            // FIXME(eddyb) don't allocate whole `String`s here.
+            std::fs::write(&dump_spirt_file_path, pretty.to_string()).unwrap();
+            std::fs::write(
+                dump_spirt_file_path.with_extension("spirt.html"),
+                pretty
+                    .render_to_html()
+                    .with_dark_mode_support()
+                    .to_html_doc(),
+            )
+            .unwrap();
+        }
+
+        let spv_words = {
+            let _timer = sess.timer("spirt::Module::lift_to_spv_module_emitter");
+            module.lift_to_spv_module_emitter().unwrap().words
+        };
+        output = {
+            let _timer = sess.timer("parse-spv_words-from-spirt");
+            let mut loader = Loader::new();
+            rspirv::binary::parse_words(&spv_words, &mut loader).unwrap();
+            loader.module()
+        };
+    }
+
+    {
         let _timer = sess.timer("peephole_opts");
         let types = peephole_opts::collect_types(&output);
         for func in &mut output.functions {
@@ -303,30 +461,76 @@ pub fn link(sess: &Session, mut inputs: Vec<Module>, opts: &Options) -> Result<L
     }
 
     let mut output = if opts.emit_multiple_modules {
-        let modules = output
-            .entry_points
-            .iter()
-            .map(|entry| {
-                let mut module = output.clone();
-                module.entry_points.clear();
-                module.entry_points.push(entry.clone());
-                let name = entry.operands[2].unwrap_literal_string();
-                (name.to_string(), module)
-            })
-            .collect();
-        LinkResult::MultipleModules(modules)
+        let mut file_stem_to_entry_name_and_module = BTreeMap::new();
+        for (i, entry) in output.entry_points.iter().enumerate() {
+            let mut module = output.clone();
+            module.entry_points.clear();
+            module.entry_points.push(entry.clone());
+            let entry_name = entry.operands[2].unwrap_literal_string().to_string();
+            let mut file_stem = OsString::from(
+                sanitize_filename::sanitize_with_options(
+                    &entry_name,
+                    sanitize_filename::Options {
+                        replacement: "-",
+                        ..Default::default()
+                    },
+                )
+                .replace("--", "-"),
+            );
+            // It's always possible to find an unambiguous `file_stem`, but it
+            // may take two tries (or more, in bizzare/adversarial cases).
+            let mut disambiguator = Some(i);
+            loop {
+                use std::collections::btree_map::Entry;
+                match file_stem_to_entry_name_and_module.entry(file_stem) {
+                    Entry::Vacant(entry) => {
+                        entry.insert((entry_name, module));
+                        break;
+                    }
+                    Entry::Occupied(entry) => {
+                        // FIXME(eddyb) there's no way to access the owned key
+                        // passed to `BTreeMap::entry` from `OccupiedEntry`.
+                        file_stem = entry.key().clone();
+                        file_stem.push(".");
+                        match disambiguator.take() {
+                            Some(d) => file_stem.push(d.to_string()),
+                            None => file_stem.push("next"),
+                        }
+                    }
+                }
+            }
+        }
+        LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        }
     } else {
         LinkResult::SingleModule(Box::new(output))
     };
 
-    let output_module_iter: Box<dyn Iterator<Item = &mut Module>> = match output {
-        LinkResult::SingleModule(ref mut m) => Box::new(std::iter::once(&mut *m as &mut Module)),
-        LinkResult::MultipleModules(ref mut m) => Box::new(m.values_mut()),
+    let output_module_iter = match &mut output {
+        LinkResult::SingleModule(m) => Either::Left(std::iter::once((None, &mut **m))),
+        LinkResult::MultipleModules {
+            file_stem_to_entry_name_and_module,
+        } => Either::Right(
+            file_stem_to_entry_name_and_module
+                .iter_mut()
+                .map(|(file_stem, (_, m))| (Some(file_stem), m)),
+        ),
     };
-    for (i, output) in output_module_iter.enumerate() {
-        if let Some(mut path) = crate::get_env_dump_dir("DUMP_POST_SPLIT") {
-            path.push(format!("mod_{}.spv", i));
-            std::fs::write(path, spirv_tools::binary::from_binary(&output.assemble())).unwrap();
+    for (file_stem, output) in output_module_iter {
+        if let Some(dir) = &opts.dump_post_split {
+            let mut file_name = disambiguated_crate_name_for_dumps.to_os_string();
+            if let Some(file_stem) = file_stem {
+                file_name.push(".");
+                file_name.push(file_stem);
+            }
+            file_name.push(".spv");
+
+            std::fs::write(
+                dir.join(file_name),
+                spirv_tools::binary::from_binary(&output.assemble()),
+            )
+            .unwrap();
         }
         // Run DCE again, even if emit_multiple_modules==false - the first DCE ran before
         // structurization and mem2reg (for perf reasons), and mem2reg may remove references to

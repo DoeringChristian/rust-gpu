@@ -69,6 +69,7 @@
 // END - Embark standard lints v0.4
 // crate-specific exceptions:
 // #![allow()]
+#![doc = include_str!("../README.md")]
 
 mod image;
 
@@ -77,7 +78,8 @@ use proc_macro2::{Delimiter, Group, Ident, Span, TokenTree};
 
 use syn::{punctuated::Punctuated, spanned::Spanned, ItemFn, Token};
 
-use quote::ToTokens;
+use quote::{quote, ToTokens};
+use std::fmt::Write;
 
 /// A macro for creating SPIR-V `OpTypeImage` types. Always produces a
 /// `spirv_std::image::Image<...>` type.
@@ -121,7 +123,7 @@ use quote::ToTokens;
 /// - `depth` — Whether it is known that the image is a depth image.
 ///    Accepted values: `true` or `false`. Default: `unknown`.
 ///
-/// [`ImageFormat`]: spirv_types::image_params::ImageFormat
+/// [`ImageFormat`]: spirv_std_types::image_params::ImageFormat
 ///
 /// Keep in mind that `sampled` here is a different concept than the `SampledImage` type:
 /// `sampled=true` means that this image requires a sampler to be able to access, while the
@@ -137,9 +139,16 @@ pub fn Image(item: TokenStream) -> TokenStream {
     output.into()
 }
 
+/// Replaces all (nested) occurrences of the `#[spirv(..)]` attribute with
+/// `#[cfg_attr(target_arch="spirv", rust_gpu::spirv(..))]`.
 #[proc_macro_attribute]
-pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut tokens = Vec::new();
+pub fn spirv(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let mut tokens: Vec<TokenTree> = Vec::new();
+
+    // prepend with #[rust_gpu::spirv(..)]
+    let attr: proc_macro2::TokenStream = attr.into();
+    tokens.extend(quote! { #[cfg_attr(target_arch="spirv", rust_gpu::spirv(#attr))] });
+
     let item: proc_macro2::TokenStream = item.into();
     for tt in item {
         match tt {
@@ -152,7 +161,11 @@ pub fn spirv(_attr: TokenStream, item: TokenStream) -> TokenStream {
                                 && matches!(group.stream().into_iter().next(), Some(TokenTree::Ident(ident)) if ident == "spirv")
                                 && matches!(sub_tokens.last(), Some(TokenTree::Punct(p)) if p.as_char() == '#') =>
                         {
-                            sub_tokens.pop();
+                            // group matches [spirv ...]
+                            let inner = group.stream(); // group stream doesn't include the brackets
+                            sub_tokens.extend(
+                                quote! { [cfg_attr(target_arch="spirv", rust_gpu::#inner)] },
+                            );
                         }
                         _ => sub_tokens.push(tt),
                     }
@@ -552,7 +565,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     if format_arguments.len() != variables.len() {
         return syn::Error::new(
             span,
-            &format!(
+            format!(
                 "{} % arguments were found, but {} variables were given",
                 format_arguments.len(),
                 variables.len()
@@ -570,7 +583,7 @@ fn debug_printf_inner(input: DebugPrintfInput) -> TokenStream {
     {
         let ident = quote::format_ident!("_{}", i);
 
-        variable_idents.push_str(&format!("%{} ", ident));
+        let _ = write!(variable_idents, "%{} ", ident);
 
         let assert_fn = match format_argument {
             FormatType::Scalar { ty } => {

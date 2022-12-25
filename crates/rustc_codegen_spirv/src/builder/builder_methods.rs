@@ -1,23 +1,26 @@
 use super::Builder;
 use crate::abi::ConvSpirvType;
 use crate::builder_spirv::{BuilderCursor, SpirvConst, SpirvValue, SpirvValueExt, SpirvValueKind};
+use crate::rustc_codegen_ssa::traits::BaseTypeMethods;
 use crate::spirv_type::SpirvType;
 use rspirv::dr::{InsertPoint, Instruction, Operand};
 use rspirv::spirv::{
     Capability, MemoryAccess, MemoryModel, MemorySemantics, Op, Scope, StorageClass, Word,
 };
+use rustc_apfloat::{ieee, Float, Round, Status};
 use rustc_codegen_ssa::common::{
-    AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope,
+    AtomicOrdering, AtomicRmwBinOp, IntPredicate, RealPredicate, SynchronizationScope, TypeKind,
 };
 use rustc_codegen_ssa::mir::operand::{OperandRef, OperandValue};
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
-    BuilderMethods, ConstMethods, IntrinsicCallMethods, LayoutTypeMethods, OverflowOp,
+    BackendTypes, BuilderMethods, ConstMethods, IntrinsicCallMethods, LayoutTypeMethods, OverflowOp,
 };
 use rustc_codegen_ssa::MemFlags;
 use rustc_middle::bug;
 use rustc_middle::ty::Ty;
 use rustc_span::Span;
+use rustc_target::abi::call::FnAbi;
 use rustc_target::abi::{Abi, Align, Scalar, Size, WrappingRange};
 use std::convert::TryInto;
 use std::iter::{self, empty};
@@ -145,9 +148,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
     fn ordering_to_semantics_def(&self, ordering: AtomicOrdering) -> SpirvValue {
         let mut invalid_seq_cst = false;
         let semantics = match ordering {
-            AtomicOrdering::NotAtomic | AtomicOrdering::Unordered | AtomicOrdering::Monotonic => {
-                MemorySemantics::NONE
-            }
+            AtomicOrdering::Unordered | AtomicOrdering::Relaxed => MemorySemantics::NONE,
             // Note: rustc currently has AtomicOrdering::Consume commented out, if it ever becomes
             // uncommented, it should be MakeVisible | Acquire.
             AtomicOrdering::Acquire => MemorySemantics::MAKE_VISIBLE | MemorySemantics::ACQUIRE,
@@ -178,7 +179,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         semantics
     }
 
-    fn memset_const_pattern(&self, ty: &SpirvType, fill_byte: u8) -> Word {
+    fn memset_const_pattern(&self, ty: &SpirvType<'tcx>, fill_byte: u8) -> Word {
         match *ty {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
             SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
@@ -214,7 +215,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             SpirvType::Vector { element, count } | SpirvType::Matrix { element, count } => {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 self.constant_composite(
-                    ty.clone().def(self.span(), self),
+                    ty.def(self.span(), self),
                     iter::repeat(elem_pat).take(count as usize),
                 )
                 .def(self)
@@ -223,7 +224,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let elem_pat = self.memset_const_pattern(&self.lookup_type(element), fill_byte);
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 self.constant_composite(
-                    ty.clone().def(self.span(), self),
+                    ty.def(self.span(), self),
                     iter::repeat(elem_pat).take(count),
                 )
                 .def(self)
@@ -244,7 +245,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
         }
     }
 
-    fn memset_dynamic_pattern(&self, ty: &SpirvType, fill_var: Word) -> Word {
+    fn memset_dynamic_pattern(&self, ty: &SpirvType<'tcx>, fill_var: Word) -> Word {
         match *ty {
             SpirvType::Void => self.fatal("memset invalid on void pattern"),
             SpirvType::Bool => self.fatal("memset invalid on bool pattern"),
@@ -272,7 +273,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let count = self.builder.lookup_const_u64(count).unwrap() as usize;
                 self.emit()
                     .composite_construct(
-                        ty.clone().def(self.span(), self),
+                        ty.def(self.span(), self),
                         None,
                         iter::repeat(elem_pat).take(count),
                     )
@@ -282,7 +283,7 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
                 let elem_pat = self.memset_dynamic_pattern(&self.lookup_type(element), fill_var);
                 self.emit()
                     .composite_construct(
-                        ty.clone().def(self.span(), self),
+                        ty.def(self.span(), self),
                         None,
                         iter::repeat(elem_pat).take(count as usize),
                     )
@@ -447,6 +448,184 @@ impl<'a, 'tcx> Builder<'a, 'tcx> {
             if offset == Size::ZERO && ty == leaf_ty {
                 return Some(indices);
             }
+        }
+    }
+
+    fn fptoint_sat(
+        &mut self,
+        signed: bool,
+        val: SpirvValue,
+        dest_ty: <Self as BackendTypes>::Type,
+    ) -> SpirvValue {
+        // This uses the old llvm emulation to implement saturation
+
+        let src_ty = self.cx.val_ty(val);
+        let (float_ty, int_ty) = if self.cx.type_kind(src_ty) == TypeKind::Vector {
+            assert_eq!(
+                self.cx.vector_length(src_ty),
+                self.cx.vector_length(dest_ty)
+            );
+            (self.cx.element_type(src_ty), self.cx.element_type(dest_ty))
+        } else {
+            (src_ty, dest_ty)
+        };
+        let int_width = self.cx().int_width(int_ty);
+        let float_width = self.cx().float_width(float_ty);
+        // LLVM's fpto[su]i returns undef when the input x is infinite, NaN, or does not fit into the
+        // destination integer type after rounding towards zero. This `undef` value can cause UB in
+        // safe code (see issue #10184), so we implement a saturating conversion on top of it:
+        // Semantically, the mathematical value of the input is rounded towards zero to the next
+        // mathematical integer, and then the result is clamped into the range of the destination
+        // integer type. Positive and negative infinity are mapped to the maximum and minimum value of
+        // the destination integer type. NaN is mapped to 0.
+        //
+        // Define f_min and f_max as the largest and smallest (finite) floats that are exactly equal to
+        // a value representable in int_ty.
+        // They are exactly equal to int_ty::{MIN,MAX} if float_ty has enough significand bits.
+        // Otherwise, int_ty::MAX must be rounded towards zero, as it is one less than a power of two.
+        // int_ty::MIN, however, is either zero or a negative power of two and is thus exactly
+        // representable. Note that this only works if float_ty's exponent range is sufficiently large.
+        // f16 or 256 bit integers would break this property. Right now the smallest float type is f32
+        // with exponents ranging up to 127, which is barely enough for i128::MIN = -2^127.
+        // On the other hand, f_max works even if int_ty::MAX is greater than float_ty::MAX. Because
+        // we're rounding towards zero, we just get float_ty::MAX (which is always an integer).
+        // This already happens today with u128::MAX = 2^128 - 1 > f32::MAX.
+        let int_max = |signed: bool, int_width: u64| -> u128 {
+            let shift_amount = 128 - int_width;
+            if signed {
+                i128::MAX as u128 >> shift_amount
+            } else {
+                u128::MAX >> shift_amount
+            }
+        };
+        let int_min = |signed: bool, int_width: u64| -> i128 {
+            if signed {
+                i128::MIN >> (128 - int_width)
+            } else {
+                0
+            }
+        };
+
+        let compute_clamp_bounds_single = |signed: bool, int_width: u64| -> (u128, u128) {
+            let rounded_min =
+                ieee::Single::from_i128_r(int_min(signed, int_width), Round::TowardZero);
+            assert_eq!(rounded_min.status, Status::OK);
+            let rounded_max =
+                ieee::Single::from_u128_r(int_max(signed, int_width), Round::TowardZero);
+            assert!(rounded_max.value.is_finite());
+            (rounded_min.value.to_bits(), rounded_max.value.to_bits())
+        };
+        let compute_clamp_bounds_double = |signed: bool, int_width: u64| -> (u128, u128) {
+            let rounded_min =
+                ieee::Double::from_i128_r(int_min(signed, int_width), Round::TowardZero);
+            assert_eq!(rounded_min.status, Status::OK);
+            let rounded_max =
+                ieee::Double::from_u128_r(int_max(signed, int_width), Round::TowardZero);
+            assert!(rounded_max.value.is_finite());
+            (rounded_min.value.to_bits(), rounded_max.value.to_bits())
+        };
+        // To implement saturation, we perform the following steps:
+        //
+        // 1. Cast x to an integer with fpto[su]i. This may result in undef.
+        // 2. Compare x to f_min and f_max, and use the comparison results to select:
+        //  a) int_ty::MIN if x < f_min or x is NaN
+        //  b) int_ty::MAX if x > f_max
+        //  c) the result of fpto[su]i otherwise
+        // 3. If x is NaN, return 0.0, otherwise return the result of step 2.
+        //
+        // This avoids resulting undef because values in range [f_min, f_max] by definition fit into the
+        // destination type. It creates an undef temporary, but *producing* undef is not UB. Our use of
+        // undef does not introduce any non-determinism either.
+        // More importantly, the above procedure correctly implements saturating conversion.
+        // Proof (sketch):
+        // If x is NaN, 0 is returned by definition.
+        // Otherwise, x is finite or infinite and thus can be compared with f_min and f_max.
+        // This yields three cases to consider:
+        // (1) if x in [f_min, f_max], the result of fpto[su]i is returned, which agrees with
+        //     saturating conversion for inputs in that range.
+        // (2) if x > f_max, then x is larger than int_ty::MAX. This holds even if f_max is rounded
+        //     (i.e., if f_max < int_ty::MAX) because in those cases, nextUp(f_max) is already larger
+        //     than int_ty::MAX. Because x is larger than int_ty::MAX, the return value of int_ty::MAX
+        //     is correct.
+        // (3) if x < f_min, then x is smaller than int_ty::MIN. As shown earlier, f_min exactly equals
+        //     int_ty::MIN and therefore the return value of int_ty::MIN is correct.
+        // QED.
+
+        let float_bits_to_llval = |bx: &mut Self, bits| {
+            let bits_llval = match float_width {
+                32 => bx.cx().const_u32(bits as u32),
+                64 => bx.cx().const_u64(bits as u64),
+                n => bug!("unsupported float width {}", n),
+            };
+            bx.bitcast(bits_llval, float_ty)
+        };
+        let (f_min, f_max) = match float_width {
+            32 => compute_clamp_bounds_single(signed, int_width),
+            64 => compute_clamp_bounds_double(signed, int_width),
+            n => bug!("unsupported float width {}", n),
+        };
+        let f_min = float_bits_to_llval(self, f_min);
+        let f_max = float_bits_to_llval(self, f_max);
+        let int_max = self.cx().const_uint_big(int_ty, int_max(signed, int_width));
+        let int_min = self
+            .cx()
+            .const_uint_big(int_ty, int_min(signed, int_width) as u128);
+        let zero = self.cx().const_uint(int_ty, 0);
+
+        // If we're working with vectors, constants must be "splatted": the constant is duplicated
+        // into each lane of the vector.  The algorithm stays the same, we are just using the
+        // same constant across all lanes.
+        let maybe_splat = |bx: &mut Self, val| {
+            if bx.cx().type_kind(dest_ty) == TypeKind::Vector {
+                bx.vector_splat(bx.vector_length(dest_ty), val)
+            } else {
+                val
+            }
+        };
+        let f_min = maybe_splat(self, f_min);
+        let f_max = maybe_splat(self, f_max);
+        let int_max = maybe_splat(self, int_max);
+        let int_min = maybe_splat(self, int_min);
+        let zero = maybe_splat(self, zero);
+
+        // Step 1 ...
+        let fptosui_result = if signed {
+            self.fptosi(val, dest_ty)
+        } else {
+            self.fptoui(val, dest_ty)
+        };
+        let less_or_nan = self.fcmp(RealPredicate::RealULT, val, f_min);
+        let greater = self.fcmp(RealPredicate::RealOGT, val, f_max);
+
+        // Step 2: We use two comparisons and two selects, with %s1 being the
+        // result:
+        //     %less_or_nan = fcmp ult %x, %f_min
+        //     %greater = fcmp olt %x, %f_max
+        //     %s0 = select %less_or_nan, int_ty::MIN, %fptosi_result
+        //     %s1 = select %greater, int_ty::MAX, %s0
+        // Note that %less_or_nan uses an *unordered* comparison. This
+        // comparison is true if the operands are not comparable (i.e., if x is
+        // NaN). The unordered comparison ensures that s1 becomes int_ty::MIN if
+        // x is NaN.
+        //
+        // Performance note: Unordered comparison can be lowered to a "flipped"
+        // comparison and a negation, and the negation can be merged into the
+        // select. Therefore, it not necessarily any more expensive than an
+        // ordered ("normal") comparison. Whether these optimizations will be
+        // performed is ultimately up to the backend, but at least x86 does
+        // perform them.
+        let s0 = self.select(less_or_nan, int_min, fptosui_result);
+        let s1 = self.select(greater, int_max, s0);
+
+        // Step 3: NaN replacement.
+        // For unsigned types, the above step already yielded int_ty::MIN == 0 if x is NaN.
+        // Therefore we only need to execute this step for signed integer types.
+        if signed {
+            // LLVM has no isNaN predicate, so we use (x == x) instead
+            let cmp = self.fcmp(RealPredicate::RealOEQ, val, val);
+            self.select(cmp, s1, zero)
+        } else {
+            s1
         }
     }
 }
@@ -619,6 +798,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn invoke(
         &mut self,
         llty: Self::Type,
+        fn_abi: Option<&FnAbi<'tcx, Ty<'tcx>>>,
         llfn: Self::Value,
         args: &[Self::Value],
         then: Self::BasicBlock,
@@ -626,7 +806,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         funclet: Option<&Self::Funclet>,
     ) -> Self::Value {
         // Exceptions don't exist, jump directly to then block
-        let result = self.call(llty, llfn, args, funclet);
+        let result = self.call(llty, fn_abi, llfn, args, funclet);
         self.emit().branch(then).unwrap();
         result
     }
@@ -833,13 +1013,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         result_id.with_type(ptr_ty)
     }
 
-    fn dynamic_alloca(&mut self, ty: Self::Type, align: Align) -> Self::Value {
-        let result = self.alloca(ty, align);
-        self.err("dynamic alloca is not supported yet");
-        result
-    }
-
-    fn array_alloca(&mut self, _ty: Self::Type, _len: Self::Value, _align: Align) -> Self::Value {
+    fn byte_array_alloca(&mut self, _len: Self::Value, _align: Align) -> Self::Value {
         self.fatal("array alloca not supported yet")
     }
 
@@ -992,14 +1166,6 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         // ignore
     }
 
-    fn type_metadata(&mut self, _function: Self::Function, _typeid: String) {
-        // ignore
-    }
-
-    fn typeid_metadata(&mut self, _typeid: String) -> Self::Value {
-        todo!()
-    }
-
     fn store(&mut self, val: Self::Value, ptr: Self::Value, _align: Align) -> Self::Value {
         let ptr_elem_ty = match self.lookup_type(ptr.ty) {
             SpirvType::Pointer { pointee } => pointee,
@@ -1008,6 +1174,19 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 ty
             )),
         };
+
+        // HACK(eddyb) https://github.com/rust-lang/rust/pull/101483 accidentally
+        // abused the fact that an `i1` LLVM value will be automatically `zext`'d
+        // to `i8` by `from_immediate`, and so you can pretend that, from the
+        // Rust perspective, a `bool` value has the type `u8`, as long as it will
+        // be stored to memory (which intrinsics all do, for historical reasons)
+        // - but we don't do that in `from_immediate`, so it's emulated here.
+        let val = match (self.lookup_type(val.ty), self.lookup_type(ptr_elem_ty)) {
+            (SpirvType::Bool, SpirvType::Integer(8, false)) => self.zext(val, ptr_elem_ty),
+
+            _ => val,
+        };
+
         assert_ty_eq!(self, ptr_elem_ty, val.ty);
         self.emit()
             .store(ptr.def(self), val.def(self), None, empty())
@@ -1086,9 +1265,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
         };
         let pointee_kind = self.lookup_type(pointee);
         let result_pointee_type = match pointee_kind {
-            SpirvType::Adt {
-                ref field_types, ..
-            } => field_types[idx as usize],
+            SpirvType::Adt { field_types, .. } => field_types[idx as usize],
             SpirvType::Array { element, .. }
             | SpirvType::RuntimeArray { element, .. }
             | SpirvType::Vector { element, .. }
@@ -1166,12 +1343,12 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn sext(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
         self.intcast(val, dest_ty, true)
     }
-    fn fptoui_sat(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Option<Self::Value> {
-        None
+    fn fptoui_sat(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.fptoint_sat(false, val, dest_ty)
     }
 
-    fn fptosi_sat(&mut self, _val: Self::Value, _dest_ty: Self::Type) -> Option<Self::Value> {
-        None
+    fn fptosi_sat(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
+        self.fptoint_sat(true, val, dest_ty)
     }
 
     fn fptoui(&mut self, val: Self::Value, dest_ty: Self::Type) -> Self::Value {
@@ -1301,7 +1478,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
                 .with_type(dest_ty);
 
             if val_is_ptr || dest_is_ptr {
-                if self.is_system_crate() {
+                if self.is_system_crate(self.span()) {
                     self.zombie(
                         result.def(self),
                         &format!(
@@ -2123,6 +2300,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
     fn call(
         &mut self,
         callee_ty: Self::Type,
+        _fn_abi: Option<&FnAbi<'tcx, Ty<'tcx>>>,
         callee: Self::Value,
         args: &[Self::Value],
         funclet: Option<&Self::Funclet>,
@@ -2175,7 +2353,7 @@ impl<'a, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'tcx> {
             ),
         };
 
-        for (argument, argument_type) in args.iter().zip(argument_types) {
+        for (argument, &argument_type) in args.iter().zip(argument_types) {
             assert_ty_eq!(self, argument.ty, argument_type);
         }
         let libm_intrinsic = self.libm_intrinsics.borrow().get(&callee_val).copied();

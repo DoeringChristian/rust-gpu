@@ -12,42 +12,56 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-20.04-16core
             target: x86_64-unknown-linux-gnu
           - os: windows-latest
             target: x86_64-pc-windows-msvc
           - os: macOS-latest
             target: x86_64-apple-darwin
-          - os: ubuntu-20.04
+          - os: ubuntu-20.04-16core
             target: aarch64-linux-android
     runs-on: ${{ matrix.os }}
     env:
-      spirv_tools_version: "20220414" # get platform-specific download link from https://github.com/KhronosGroup/SPIRV-Tools/blob/master/docs/downloads.md
+      # Get platform-specific download links from https://github.com/KhronosGroup/SPIRV-Tools/blob/master/docs/downloads.md
+      # which will point to the `spirv-tools` Google Cloud Storage Bucket - if
+      # you need to manually look around, you can search for `spirv_tools_version`
+      # (which should be in the `YYYYMMDD` format and appear in paths) in these
+      # listings (NB: they're limited to 1000 results and may need adjustment):
+      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1800
+      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/macos-clang-release/continuous/1800
+      # https://storage.googleapis.com/spirv-tools/?list-type=2&start-after=artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1800
+      spirv_tools_version: "20221024"
+      # NOTE(eddyb) do not forget to update both the above date and below links!
+      # FIXME(eddyb) automate this somewhat by taking advantage of the bucket APIs,
+      # and look for the first build with the date in `spirv_tools_version`.
+      spirv_tools_linux_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1863/20221024-094528/install.tgz"
+      spirv_tools_macos_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/macos-clang-release/continuous/1875/20221024-094531/install.tgz"
+      spirv_tools_windows_url: "https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1851/20221024-094908/install.zip"
       RUSTUP_UNPACK_RAM: "26214400"
       RUSTUP_IO_THREADS: "1"
     steps:
       - uses: actions/checkout@v2
-      # Ubuntu does have `brew install spirv-tools`, but it installs from
-      # source and so takes >8 minutes.
       - if: ${{ runner.os == 'Linux' }}
-        name: Linux - Install native dependencies
+        name: Linux - Install native dependencies and spirv-tools
         run: |
           sudo apt install libwayland-cursor0 libxkbcommon-dev libwayland-dev
-          mkdir "${HOME}/spirv-tools"          
-          curl -fL https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/linux-clang-release/continuous/1744/20220414-060821/install.tgz | tar -xz -C "${HOME}/spirv-tools"
+          mkdir "${HOME}/spirv-tools"
+          curl -fL "$spirv_tools_linux_url" | tar -xz -C "${HOME}/spirv-tools"
           echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - if: ${{ runner.os == 'macOS' }}
         name: Mac - Install spirv-tools
-        run: brew install spirv-tools
-      # Currently SPIR-V tools aren't available in any package manager
-      # on Windows that put the tools in the path.
+        # FIXME(eddyb) deduplicate with Linux (and maybe even Windows?).
+        run: |
+          mkdir "${HOME}/spirv-tools"
+          curl -fL "$spirv_tools_macos_url" | tar -xz -C "${HOME}/spirv-tools"
+          echo "${HOME}/spirv-tools/install/bin" >> $GITHUB_PATH
       - if: ${{ runner.os == 'Windows' }}
         name: Windows - Install spirv-tools
         shell: bash
         run: |
           tmparch=$(mktemp)
           mkdir "${HOME}/spirv-tools"
-          curl -fL -o "$tmparch" https://storage.googleapis.com/spirv-tools/artifacts/prod/graphics_shader_compiler/spirv-tools/windows-msvc-2017-release/continuous/1732/20220414-060824/install.zip
+          curl -fL -o "$tmparch" "$spirv_tools_windows_url"
           unzip "$tmparch" -d "${HOME}/spirv-tools"
       - if: ${{ runner.os == 'Windows' }}
         # Runs separately to add spir-v tools to Powershell's Path.
@@ -102,12 +116,12 @@ jobs:
           echo "::endgroup::"
 
           echo "::group::Build WGPU example for Android"
-          cargo apk build --manifest-path examples/runners/wgpu/Cargo.toml --features use-installed-tools --no-default-features
+          cargo apk build -p example-runner-wgpu --features use-installed-tools --no-default-features
           echo "::endgroup::"
 
   lint:
     name: Lint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-20.04-16core
     steps:
       # Note that we are explicitly NOT checking out submodules, to validate
       # that we haven't accidentally enabled spirv-tools native compilation
@@ -137,6 +151,27 @@ jobs:
         run: RUSTDOCFLAGS=-Dwarnings cargo doc --no-deps
       - name: Clippy
         run: .github/workflows/clippy.sh
+      # HACK(eddyb) see `docs/src/codegen-args.md` for more context around this,
+      # but basically we're implementing a custom "lint" to ban `std::env` usage,
+      # which could be disastrous because env vars access can't be tracked by
+      # `rustc`, unlike its CLI flags (which are integrated with incremental).
+      - name: Disallow `std::env` (mis)use from `rustc_codegen_spirv``
+        run: |
+          if (
+              egrep -r '::\s*env|env\s*::' crates/rustc_codegen_spirv/src/ |
+              # HACK(eddyb) exclude the one place in `rustc_codegen_spirv`
+              # needing access to an env var (only for codegen args `--help`).
+              egrep -v '^crates/rustc_codegen_spirv/src/codegen_cx/mod.rs:            let help_flag_comes_from_spirv_builder_env_var = std::env::var\(spirv_builder_env_var\)$'
+          ); then
+            echo '^^^'
+            echo '!!! Found disallowed `std::env` usage in `rustc_codegen_spirv` !!!'
+            echo ' ("codegen args" should be used instead of environment variables)'
+            echo
+            echo 'For more details on "codegen args", see: docs/src/codegen-args.md'
+            echo ' (and/or https://github.com/EmbarkStudios/rust-gpu/pull/959)'
+            echo
+            exit 1
+          fi
 
   cargo-deny:
     runs-on: ubuntu-20.04

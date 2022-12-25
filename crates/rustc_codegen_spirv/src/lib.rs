@@ -17,6 +17,8 @@
 //! [`spirv-tools-sys`]: https://embarkstudios.github.io/rust-gpu/api/spirv_tools_sys
 #![feature(rustc_private)]
 #![feature(assert_matches)]
+#![feature(result_flattening)]
+#![feature(lint_reasons)]
 #![feature(once_cell)]
 // crate-specific exceptions:
 #![allow(
@@ -37,6 +39,7 @@ compile_error!(
     "Either \"use-compiled-tools\" (enabled by default) or \"use-installed-tools\" may be enabled."
 );
 
+extern crate rustc_apfloat;
 extern crate rustc_ast;
 extern crate rustc_attr;
 extern crate rustc_codegen_ssa;
@@ -105,11 +108,10 @@ use rustc_session::Session;
 use rustc_span::symbol::{sym, Symbol};
 use rustc_target::spec::{Target, TargetTriple};
 use std::any::Any;
-use std::env;
 use std::fs::{create_dir_all, File};
 use std::io::Cursor;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 
 fn dump_mir<'tcx>(
@@ -142,11 +144,12 @@ fn is_blocklisted_fn<'tcx>(
             // Helper for detecting `<_ as core::fmt::Debug>::fmt` (in impls).
             let is_debug_fmt_method = |def_id| match tcx.opt_associated_item(def_id) {
                 Some(assoc) if assoc.ident(tcx).name == sym::fmt => match assoc.container {
-                    ty::ImplContainer(impl_def_id) => {
+                    ty::ImplContainer => {
+                        let impl_def_id = assoc.container_id(tcx);
                         tcx.impl_trait_ref(impl_def_id).map(|tr| tr.def_id)
                             == Some(debug_trait_def_id)
                     }
-                    ty::TraitContainer(_) => false,
+                    ty::TraitContainer => false,
                 },
                 _ => false,
             };
@@ -156,7 +159,7 @@ fn is_blocklisted_fn<'tcx>(
             }
 
             if tcx.opt_item_ident(def.did).map(|i| i.name) == Some(sym.fmt_decimal) {
-                if let Some(parent_def_id) = tcx.parent(def.did) {
+                if let Some(parent_def_id) = tcx.opt_parent(def.did) {
                     if is_debug_fmt_method(parent_def_id) {
                         return true;
                     }
@@ -190,7 +193,7 @@ impl ThinBufferMethods for SpirvThinBuffer {
 struct SpirvCodegenBackend;
 
 impl CodegenBackend for SpirvCodegenBackend {
-    fn target_features(&self, sess: &Session) -> Vec<Symbol> {
+    fn target_features(&self, sess: &Session, _allow_unstable: bool) -> Vec<Symbol> {
         let cmdline = sess.opts.cg.target_feature.split(',');
         let cfg = sess.target.options.features.split(',');
         cfg.chain(cmdline)
@@ -207,7 +210,7 @@ impl CodegenBackend for SpirvCodegenBackend {
                 .parse::<target::SpirvTarget>()
                 .map(|target| target.rustc_target())
                 .ok(),
-            TargetTriple::TargetPath(_) => None,
+            TargetTriple::TargetJson { .. } => None,
         }
     }
 
@@ -285,7 +288,6 @@ impl WriteBackendMethods for SpirvCodegenBackend {
     type Module = Vec<u32>;
     type TargetMachine = ();
     type ModuleBuffer = SpirvModuleBuffer;
-    type Context = ();
     type ThinData = ();
     type ThinBuffer = SpirvThinBuffer;
 
@@ -329,7 +331,7 @@ impl WriteBackendMethods for SpirvCodegenBackend {
 
     unsafe fn optimize_thin(
         _cgcx: &CodegenContext<Self>,
-        thin_module: &mut ThinModule<Self>,
+        thin_module: ThinModule<Self>,
     ) -> Result<ModuleCodegen<Self::Module>, FatalError> {
         let module = ModuleCodegen {
             module_llvm: spirv_tools::binary::to_binary(thin_module.data())
@@ -339,6 +341,13 @@ impl WriteBackendMethods for SpirvCodegenBackend {
             kind: ModuleKind::Regular,
         };
         Ok(module)
+    }
+
+    fn optimize_fat(
+        _: &CodegenContext<Self>,
+        _: &mut ModuleCodegen<Self::Module>,
+    ) -> Result<(), FatalError> {
+        todo!()
     }
 
     unsafe fn codegen(
@@ -372,30 +381,16 @@ impl WriteBackendMethods for SpirvCodegenBackend {
     fn serialize_module(module: ModuleCodegen<Self::Module>) -> (String, Self::ModuleBuffer) {
         (module.name, SpirvModuleBuffer(module.module_llvm))
     }
-
-    fn run_lto_pass_manager(
-        _: &CodegenContext<Self>,
-        _: &ModuleCodegen<Self::Module>,
-        _: &ModuleConfig,
-        _: bool,
-    ) -> Result<(), FatalError> {
-        todo!()
-    }
 }
 
 impl ExtraBackendMethods for SpirvCodegenBackend {
-    fn new_metadata(&self, _: TyCtxt<'_>, _: &str) -> Self::Module {
-        Self::Module::new()
-    }
-
     fn codegen_allocator<'tcx>(
         &self,
         _: TyCtxt<'tcx>,
-        _: &mut Self::Module,
         _: &str,
         _: AllocatorKind,
         _: bool,
-    ) {
+    ) -> Self::Module {
         todo!()
     }
 
@@ -406,7 +401,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
     ) -> (ModuleCodegen<Self::Module>, u64) {
         let _timer = tcx
             .prof
-            .extra_verbose_generic_activity("codegen_module", cgu_name.to_string());
+            .verbose_generic_activity_with_arg("codegen_module", cgu_name.to_string());
 
         // TODO: Do dep_graph stuff
         let cgu = tcx.codegen_unit(cgu_name);
@@ -415,9 +410,8 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
         let do_codegen = || {
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
 
-            if let Some(mut path) = get_env_dump_dir("DUMP_MIR") {
-                path.push(cgu_name.to_string());
-                dump_mir(tcx, &mono_items, &path);
+            if let Some(dir) = &cx.codegen_args.dump_mir {
+                dump_mir(tcx, &mono_items, &dir.join(cgu_name.to_string()));
             }
 
             for &(mono_item, (linkage, visibility)) in mono_items.iter() {
@@ -443,7 +437,7 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
                 // attributes::sanitize(&cx, SanitizerSet::empty(), entry);
             }
         };
-        if let Ok(ref path) = env::var("DUMP_MODULE_ON_PANIC") {
+        if let Some(path) = &cx.codegen_args.dump_module_on_panic {
             let module_dumper = DumpModuleOnPanic { cx: &cx, path };
             with_no_trimmed_paths!(do_codegen());
             drop(module_dumper);
@@ -471,44 +465,22 @@ impl ExtraBackendMethods for SpirvCodegenBackend {
     {
         Arc::new(|_| Ok(()))
     }
-
-    fn target_cpu<'b>(&self, _: &'b Session) -> &'b str {
-        todo!()
-    }
-
-    fn tune_cpu<'b>(&self, _: &'b Session) -> Option<&'b str> {
-        None
-    }
 }
 
 struct DumpModuleOnPanic<'a, 'cx, 'tcx> {
     cx: &'cx CodegenCx<'tcx>,
-    path: &'a str,
+    path: &'a Path,
 }
 
 impl Drop for DumpModuleOnPanic<'_, '_, '_> {
     fn drop(&mut self) {
         if std::thread::panicking() {
-            let path: &Path = self.path.as_ref();
-            if path.has_root() {
-                self.cx.builder.dump_module(path);
+            if self.path.has_root() {
+                self.cx.builder.dump_module(self.path);
             } else {
                 println!("{}", self.cx.builder.dump_module_str());
             }
         }
-    }
-}
-
-fn get_env_dump_dir(env_var: &str) -> Option<PathBuf> {
-    if let Some(path) = std::env::var_os(env_var) {
-        let path = PathBuf::from(path);
-        if path.is_file() {
-            std::fs::remove_file(&path).unwrap();
-        }
-        std::fs::create_dir_all(&path).unwrap();
-        Some(path)
-    } else {
-        None
     }
 }
 

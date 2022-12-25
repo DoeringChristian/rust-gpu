@@ -1,5 +1,6 @@
 // build-pass
 
+use spirv_std::spirv;
 use spirv_std::ByteAddressableBuffer;
 
 pub struct SmallStruct {
@@ -10,7 +11,7 @@ pub struct SmallStruct {
 #[spirv(fragment)]
 pub fn load(
     #[spirv(descriptor_set = 0, binding = 0, storage_buffer)] buf: &mut [u32],
-    #[spirv(flat)] out: &mut SmallStruct,
+    out: &mut SmallStruct,
 ) {
     unsafe {
         let buf = ByteAddressableBuffer::new(buf);

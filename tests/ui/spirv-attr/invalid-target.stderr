@@ -1,74 +1,68 @@
 error: attribute is only valid on a struct, not on a macro def
-  --> $DIR/invalid-target.rs:34:5
+  --> $DIR/invalid-target.rs:35:5
    |
-34 |     sampler, block, sampled_image, generic_image_type, // struct-only
+35 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a macro def
-  --> $DIR/invalid-target.rs:34:14
+  --> $DIR/invalid-target.rs:35:14
    |
-34 |     sampler, block, sampled_image, generic_image_type, // struct-only
+35 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |              ^^^^^
 
 error: attribute is only valid on a struct, not on a macro def
-  --> $DIR/invalid-target.rs:34:21
+  --> $DIR/invalid-target.rs:35:21
    |
-34 |     sampler, block, sampled_image, generic_image_type, // struct-only
+35 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a macro def
-  --> $DIR/invalid-target.rs:34:36
+  --> $DIR/invalid-target.rs:35:36
    |
-34 |     sampler, block, sampled_image, generic_image_type, // struct-only
+35 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a macro def
-  --> $DIR/invalid-target.rs:35:5
+  --> $DIR/invalid-target.rs:36:5
    |
-35 |     vertex, // fn-only
+36 |     vertex, // fn-only
    |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a macro def
-  --> $DIR/invalid-target.rs:36:5
+  --> $DIR/invalid-target.rs:37:5
    |
-36 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+37 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a macro def
-  --> $DIR/invalid-target.rs:36:14
+  --> $DIR/invalid-target.rs:37:14
    |
-36 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+37 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a macro def
-  --> $DIR/invalid-target.rs:36:24
+  --> $DIR/invalid-target.rs:37:24
    |
-36 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+37 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a macro def
-  --> $DIR/invalid-target.rs:36:44
+  --> $DIR/invalid-target.rs:37:44
    |
-36 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+37 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a macro def
-  --> $DIR/invalid-target.rs:36:57
+  --> $DIR/invalid-target.rs:37:57
    |
-36 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+37 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a macro def
-  --> $DIR/invalid-target.rs:36:63
+  --> $DIR/invalid-target.rs:37:63
    |
-36 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+37 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                               ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a macro def
-  --> $DIR/invalid-target.rs:37:5
-   |
-37 |     unroll_loops, // fn/closure-only
-   |     ^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a extern crate
   --> $DIR/invalid-target.rs:44:5
@@ -136,2705 +130,2495 @@ error: attribute is only valid on a function parameter, not on a extern crate
 46 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a extern crate
-  --> $DIR/invalid-target.rs:47:5
-   |
-47 |     unroll_loops, // fn/closure-only
-   |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a use
-  --> $DIR/invalid-target.rs:52:5
+  --> $DIR/invalid-target.rs:51:5
    |
-52 |     sampler, block, sampled_image, generic_image_type, // struct-only
+51 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a use
-  --> $DIR/invalid-target.rs:52:14
+  --> $DIR/invalid-target.rs:51:14
    |
-52 |     sampler, block, sampled_image, generic_image_type, // struct-only
+51 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |              ^^^^^
 
 error: attribute is only valid on a struct, not on a use
-  --> $DIR/invalid-target.rs:52:21
+  --> $DIR/invalid-target.rs:51:21
    |
-52 |     sampler, block, sampled_image, generic_image_type, // struct-only
+51 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a use
-  --> $DIR/invalid-target.rs:52:36
+  --> $DIR/invalid-target.rs:51:36
    |
-52 |     sampler, block, sampled_image, generic_image_type, // struct-only
+51 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a use
-  --> $DIR/invalid-target.rs:53:5
+  --> $DIR/invalid-target.rs:52:5
    |
-53 |     vertex, // fn-only
+52 |     vertex, // fn-only
    |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a use
-  --> $DIR/invalid-target.rs:54:5
+  --> $DIR/invalid-target.rs:53:5
    |
-54 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+53 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a use
-  --> $DIR/invalid-target.rs:54:14
+  --> $DIR/invalid-target.rs:53:14
    |
-54 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+53 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a use
-  --> $DIR/invalid-target.rs:54:24
+  --> $DIR/invalid-target.rs:53:24
    |
-54 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+53 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a use
-  --> $DIR/invalid-target.rs:54:44
+  --> $DIR/invalid-target.rs:53:44
    |
-54 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+53 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a use
-  --> $DIR/invalid-target.rs:54:57
+  --> $DIR/invalid-target.rs:53:57
    |
-54 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+53 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a use
-  --> $DIR/invalid-target.rs:54:63
+  --> $DIR/invalid-target.rs:53:63
    |
-54 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+53 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a use
-  --> $DIR/invalid-target.rs:55:5
-   |
-55 |     unroll_loops, // fn/closure-only
-   |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a module
-  --> $DIR/invalid-target.rs:60:5
+  --> $DIR/invalid-target.rs:58:5
    |
-60 |     sampler, block, sampled_image, generic_image_type, // struct-only
+58 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a module
-  --> $DIR/invalid-target.rs:60:14
+  --> $DIR/invalid-target.rs:58:14
    |
-60 |     sampler, block, sampled_image, generic_image_type, // struct-only
+58 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |              ^^^^^
 
 error: attribute is only valid on a struct, not on a module
-  --> $DIR/invalid-target.rs:60:21
+  --> $DIR/invalid-target.rs:58:21
    |
-60 |     sampler, block, sampled_image, generic_image_type, // struct-only
+58 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a module
-  --> $DIR/invalid-target.rs:60:36
+  --> $DIR/invalid-target.rs:58:36
    |
-60 |     sampler, block, sampled_image, generic_image_type, // struct-only
+58 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a module
-  --> $DIR/invalid-target.rs:61:5
+  --> $DIR/invalid-target.rs:59:5
    |
-61 |     vertex, // fn-only
+59 |     vertex, // fn-only
    |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a module
-  --> $DIR/invalid-target.rs:62:5
+  --> $DIR/invalid-target.rs:60:5
    |
-62 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+60 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a module
-  --> $DIR/invalid-target.rs:62:14
+  --> $DIR/invalid-target.rs:60:14
    |
-62 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+60 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a module
-  --> $DIR/invalid-target.rs:62:24
+  --> $DIR/invalid-target.rs:60:24
    |
-62 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+60 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a module
-  --> $DIR/invalid-target.rs:62:44
+  --> $DIR/invalid-target.rs:60:44
    |
-62 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+60 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a module
-  --> $DIR/invalid-target.rs:62:57
+  --> $DIR/invalid-target.rs:60:57
    |
-62 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+60 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a module
-  --> $DIR/invalid-target.rs:62:63
+  --> $DIR/invalid-target.rs:60:63
    |
-62 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+60 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a module
-  --> $DIR/invalid-target.rs:63:5
-   |
-63 |     unroll_loops, // fn/closure-only
-   |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a foreign module
-  --> $DIR/invalid-target.rs:68:5
+  --> $DIR/invalid-target.rs:65:5
    |
-68 |     sampler, block, sampled_image, generic_image_type, // struct-only
+65 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign module
-  --> $DIR/invalid-target.rs:68:14
+  --> $DIR/invalid-target.rs:65:14
    |
-68 |     sampler, block, sampled_image, generic_image_type, // struct-only
+65 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |              ^^^^^
 
 error: attribute is only valid on a struct, not on a foreign module
-  --> $DIR/invalid-target.rs:68:21
+  --> $DIR/invalid-target.rs:65:21
    |
-68 |     sampler, block, sampled_image, generic_image_type, // struct-only
+65 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign module
-  --> $DIR/invalid-target.rs:68:36
+  --> $DIR/invalid-target.rs:65:36
    |
-68 |     sampler, block, sampled_image, generic_image_type, // struct-only
+65 |     sampler, block, sampled_image, generic_image_type, // struct-only
    |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a foreign module
-  --> $DIR/invalid-target.rs:69:5
+  --> $DIR/invalid-target.rs:66:5
    |
-69 |     vertex, // fn-only
+66 |     vertex, // fn-only
    |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign module
-  --> $DIR/invalid-target.rs:70:5
+  --> $DIR/invalid-target.rs:67:5
    |
-70 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+67 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign module
-  --> $DIR/invalid-target.rs:70:14
+  --> $DIR/invalid-target.rs:67:14
    |
-70 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+67 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign module
-  --> $DIR/invalid-target.rs:70:24
+  --> $DIR/invalid-target.rs:67:24
    |
-70 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+67 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign module
-  --> $DIR/invalid-target.rs:70:44
+  --> $DIR/invalid-target.rs:67:44
    |
-70 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+67 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign module
-  --> $DIR/invalid-target.rs:70:57
+  --> $DIR/invalid-target.rs:67:57
    |
-70 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+67 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign module
-  --> $DIR/invalid-target.rs:70:63
+  --> $DIR/invalid-target.rs:67:63
    |
-70 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+67 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a foreign module
-  --> $DIR/invalid-target.rs:71:5
+error: attribute is only valid on a struct, not on a static item
+  --> $DIR/invalid-target.rs:93:5
    |
-71 |     unroll_loops, // fn/closure-only
-   |     ^^^^^^^^^^^^
+93 |     sampler, block, sampled_image, generic_image_type, // struct-only
+   |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a static item
+  --> $DIR/invalid-target.rs:93:14
+   |
+93 |     sampler, block, sampled_image, generic_image_type, // struct-only
+   |              ^^^^^
+
+error: attribute is only valid on a struct, not on a static item
+  --> $DIR/invalid-target.rs:93:21
+   |
+93 |     sampler, block, sampled_image, generic_image_type, // struct-only
+   |                     ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a static item
+  --> $DIR/invalid-target.rs:93:36
+   |
+93 |     sampler, block, sampled_image, generic_image_type, // struct-only
+   |                                    ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a static item
+  --> $DIR/invalid-target.rs:94:5
+   |
+94 |     vertex, // fn-only
+   |     ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a static item
+  --> $DIR/invalid-target.rs:95:5
+   |
+95 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+   |     ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a static item
+  --> $DIR/invalid-target.rs:95:14
+   |
+95 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+   |              ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a static item
+  --> $DIR/invalid-target.rs:95:24
+   |
+95 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+   |                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a static item
+  --> $DIR/invalid-target.rs:95:44
+   |
+95 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+   |                                            ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a static item
+  --> $DIR/invalid-target.rs:95:57
+   |
+95 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+   |                                                         ^^^^
+
+error: attribute is only valid on a function parameter, not on a static item
+  --> $DIR/invalid-target.rs:95:63
+   |
+95 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+   |                                                               ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a constant item
    --> $DIR/invalid-target.rs:100:5
     |
 100 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
-error: attribute is only valid on a struct, not on a static item
+error: attribute is only valid on a struct, not on a constant item
    --> $DIR/invalid-target.rs:100:14
     |
 100 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
-error: attribute is only valid on a struct, not on a static item
+error: attribute is only valid on a struct, not on a constant item
    --> $DIR/invalid-target.rs:100:21
     |
 100 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
-error: attribute is only valid on a struct, not on a static item
+error: attribute is only valid on a struct, not on a constant item
    --> $DIR/invalid-target.rs:100:36
     |
 100 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
-error: attribute is only valid on a function, not on a static item
+error: attribute is only valid on a function, not on a constant item
    --> $DIR/invalid-target.rs:101:5
     |
 101 |     vertex, // fn-only
     |     ^^^^^^
 
-error: attribute is only valid on a function parameter, not on a static item
+error: attribute is only valid on a function parameter, not on a constant item
    --> $DIR/invalid-target.rs:102:5
     |
 102 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a static item
+error: attribute is only valid on a function parameter, not on a constant item
    --> $DIR/invalid-target.rs:102:14
     |
 102 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a static item
+error: attribute is only valid on a function parameter, not on a constant item
    --> $DIR/invalid-target.rs:102:24
     |
 102 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a static item
+error: attribute is only valid on a function parameter, not on a constant item
    --> $DIR/invalid-target.rs:102:44
     |
 102 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a static item
+error: attribute is only valid on a function parameter, not on a constant item
    --> $DIR/invalid-target.rs:102:57
     |
 102 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
-error: attribute is only valid on a function parameter, not on a static item
+error: attribute is only valid on a function parameter, not on a constant item
    --> $DIR/invalid-target.rs:102:63
     |
 102 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a static item
-   --> $DIR/invalid-target.rs:103:5
+error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:107:5
     |
-103 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
+107 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |     ^^^^^^^
 
-error: attribute is only valid on a struct, not on a constant item
+error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:107:14
+    |
+107 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |              ^^^^^
+
+error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:107:21
+    |
+107 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |                     ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:107:36
+    |
+107 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                    ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a type alias
    --> $DIR/invalid-target.rs:108:5
     |
-108 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |     ^^^^^^^
+108 |     vertex, // fn-only
+    |     ^^^^^^
 
-error: attribute is only valid on a struct, not on a constant item
-   --> $DIR/invalid-target.rs:108:14
-    |
-108 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |              ^^^^^
-
-error: attribute is only valid on a struct, not on a constant item
-   --> $DIR/invalid-target.rs:108:21
-    |
-108 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |                     ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a constant item
-   --> $DIR/invalid-target.rs:108:36
-    |
-108 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                    ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a constant item
+error: attribute is only valid on a function parameter, not on a type alias
    --> $DIR/invalid-target.rs:109:5
     |
-109 |     vertex, // fn-only
-    |     ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a constant item
-   --> $DIR/invalid-target.rs:110:5
-    |
-110 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+109 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a constant item
-   --> $DIR/invalid-target.rs:110:14
+error: attribute is only valid on a function parameter, not on a type alias
+   --> $DIR/invalid-target.rs:109:14
     |
-110 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+109 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a constant item
-   --> $DIR/invalid-target.rs:110:24
+error: attribute is only valid on a function parameter, not on a type alias
+   --> $DIR/invalid-target.rs:109:24
     |
-110 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+109 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a constant item
-   --> $DIR/invalid-target.rs:110:44
+error: attribute is only valid on a function parameter, not on a type alias
+   --> $DIR/invalid-target.rs:109:44
     |
-110 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+109 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a constant item
-   --> $DIR/invalid-target.rs:110:57
+error: attribute is only valid on a function parameter, not on a type alias
+   --> $DIR/invalid-target.rs:109:57
     |
-110 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+109 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
-error: attribute is only valid on a function parameter, not on a constant item
-   --> $DIR/invalid-target.rs:110:63
+error: attribute is only valid on a function parameter, not on a type alias
+   --> $DIR/invalid-target.rs:109:63
     |
-110 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+109 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a constant item
-   --> $DIR/invalid-target.rs:111:5
+error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:114:5
     |
-111 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
+114 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:114:14
+    |
+114 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |              ^^^^^
+
+error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:114:21
+    |
+114 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |                     ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a type alias
+   --> $DIR/invalid-target.rs:114:36
+    |
+114 |     sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                    ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a type alias
+   --> $DIR/invalid-target.rs:115:5
+    |
+115 |     vertex, // fn-only
+    |     ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a type alias
    --> $DIR/invalid-target.rs:116:5
     |
-116 |     sampler, block, sampled_image, generic_image_type, // struct-only
+116 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
-error: attribute is only valid on a struct, not on a type alias
+error: attribute is only valid on a function parameter, not on a type alias
    --> $DIR/invalid-target.rs:116:14
     |
-116 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |              ^^^^^
-
-error: attribute is only valid on a struct, not on a type alias
-   --> $DIR/invalid-target.rs:116:21
-    |
-116 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |                     ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a type alias
-   --> $DIR/invalid-target.rs:116:36
-    |
-116 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                    ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a type alias
-   --> $DIR/invalid-target.rs:117:5
-    |
-117 |     vertex, // fn-only
-    |     ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:118:5
-    |
-118 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |     ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:118:14
-    |
-118 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+116 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:118:24
+   --> $DIR/invalid-target.rs:116:24
     |
-118 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+116 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:118:44
+   --> $DIR/invalid-target.rs:116:44
     |
-118 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+116 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:118:57
+   --> $DIR/invalid-target.rs:116:57
     |
-118 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+116 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:118:63
+   --> $DIR/invalid-target.rs:116:63
     |
-118 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+116 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a type alias
-   --> $DIR/invalid-target.rs:119:5
-    |
-119 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a type alias
-   --> $DIR/invalid-target.rs:124:5
-    |
-124 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |     ^^^^^^^
-
-error: attribute is only valid on a struct, not on a type alias
-   --> $DIR/invalid-target.rs:124:14
-    |
-124 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |              ^^^^^
-
-error: attribute is only valid on a struct, not on a type alias
-   --> $DIR/invalid-target.rs:124:21
-    |
-124 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |                     ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a type alias
-   --> $DIR/invalid-target.rs:124:36
-    |
-124 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                    ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a type alias
+error: attribute is only valid on a struct, not on a enum
    --> $DIR/invalid-target.rs:125:5
     |
-125 |     vertex, // fn-only
-    |     ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:126:5
-    |
-126 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |     ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:126:14
-    |
-126 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |              ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:126:24
-    |
-126 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:126:44
-    |
-126 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                            ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:126:57
-    |
-126 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                         ^^^^
-
-error: attribute is only valid on a function parameter, not on a type alias
-   --> $DIR/invalid-target.rs:126:63
-    |
-126 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                               ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a type alias
-   --> $DIR/invalid-target.rs:127:5
-    |
-127 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a enum
-   --> $DIR/invalid-target.rs:136:5
-    |
-136 |     sampler, block, sampled_image, generic_image_type, // struct-only
+125 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a enum
-   --> $DIR/invalid-target.rs:136:14
+   --> $DIR/invalid-target.rs:125:14
     |
-136 |     sampler, block, sampled_image, generic_image_type, // struct-only
+125 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
 error: attribute is only valid on a struct, not on a enum
-   --> $DIR/invalid-target.rs:136:21
+   --> $DIR/invalid-target.rs:125:21
     |
-136 |     sampler, block, sampled_image, generic_image_type, // struct-only
+125 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a enum
-   --> $DIR/invalid-target.rs:136:36
+   --> $DIR/invalid-target.rs:125:36
     |
-136 |     sampler, block, sampled_image, generic_image_type, // struct-only
+125 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a enum
-   --> $DIR/invalid-target.rs:137:5
+   --> $DIR/invalid-target.rs:126:5
     |
-137 |     vertex, // fn-only
+126 |     vertex, // fn-only
     |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum
-   --> $DIR/invalid-target.rs:138:5
+   --> $DIR/invalid-target.rs:127:5
     |
-138 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+127 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum
-   --> $DIR/invalid-target.rs:138:14
+   --> $DIR/invalid-target.rs:127:14
     |
-138 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+127 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum
-   --> $DIR/invalid-target.rs:138:24
+   --> $DIR/invalid-target.rs:127:24
     |
-138 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+127 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum
-   --> $DIR/invalid-target.rs:138:44
+   --> $DIR/invalid-target.rs:127:44
     |
-138 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+127 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum
-   --> $DIR/invalid-target.rs:138:57
+   --> $DIR/invalid-target.rs:127:57
     |
-138 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+127 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a enum
-   --> $DIR/invalid-target.rs:138:63
+   --> $DIR/invalid-target.rs:127:63
     |
-138 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+127 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a enum
-   --> $DIR/invalid-target.rs:139:5
-    |
-139 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a enum variant
-   --> $DIR/invalid-target.rs:143:9
+   --> $DIR/invalid-target.rs:131:9
     |
-143 |         sampler, block, sampled_image, generic_image_type, // struct-only
+131 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a enum variant
-   --> $DIR/invalid-target.rs:143:18
+   --> $DIR/invalid-target.rs:131:18
     |
-143 |         sampler, block, sampled_image, generic_image_type, // struct-only
+131 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a enum variant
-   --> $DIR/invalid-target.rs:143:25
+   --> $DIR/invalid-target.rs:131:25
     |
-143 |         sampler, block, sampled_image, generic_image_type, // struct-only
+131 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a enum variant
-   --> $DIR/invalid-target.rs:143:40
+   --> $DIR/invalid-target.rs:131:40
     |
-143 |         sampler, block, sampled_image, generic_image_type, // struct-only
+131 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a enum variant
-   --> $DIR/invalid-target.rs:144:9
+   --> $DIR/invalid-target.rs:132:9
     |
-144 |         vertex, // fn-only
+132 |         vertex, // fn-only
     |         ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum variant
-   --> $DIR/invalid-target.rs:145:9
+   --> $DIR/invalid-target.rs:133:9
     |
-145 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+133 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum variant
-   --> $DIR/invalid-target.rs:145:18
+   --> $DIR/invalid-target.rs:133:18
     |
-145 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+133 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum variant
-   --> $DIR/invalid-target.rs:145:28
+   --> $DIR/invalid-target.rs:133:28
     |
-145 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+133 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum variant
-   --> $DIR/invalid-target.rs:145:48
+   --> $DIR/invalid-target.rs:133:48
     |
-145 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+133 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a enum variant
-   --> $DIR/invalid-target.rs:145:61
+   --> $DIR/invalid-target.rs:133:61
     |
-145 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+133 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a enum variant
-   --> $DIR/invalid-target.rs:145:67
+   --> $DIR/invalid-target.rs:133:67
     |
-145 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+133 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                   ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a enum variant
-   --> $DIR/invalid-target.rs:146:9
-    |
-146 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:150:13
+   --> $DIR/invalid-target.rs:137:13
     |
-150 |             sampler, block, sampled_image, generic_image_type, // struct-only
+137 |             sampler, block, sampled_image, generic_image_type, // struct-only
     |             ^^^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:150:22
+   --> $DIR/invalid-target.rs:137:22
     |
-150 |             sampler, block, sampled_image, generic_image_type, // struct-only
+137 |             sampler, block, sampled_image, generic_image_type, // struct-only
     |                      ^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:150:29
+   --> $DIR/invalid-target.rs:137:29
     |
-150 |             sampler, block, sampled_image, generic_image_type, // struct-only
+137 |             sampler, block, sampled_image, generic_image_type, // struct-only
     |                             ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:150:44
+   --> $DIR/invalid-target.rs:137:44
     |
-150 |             sampler, block, sampled_image, generic_image_type, // struct-only
+137 |             sampler, block, sampled_image, generic_image_type, // struct-only
     |                                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a struct field
-   --> $DIR/invalid-target.rs:151:13
+   --> $DIR/invalid-target.rs:138:13
     |
-151 |             vertex, // fn-only
+138 |             vertex, // fn-only
     |             ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:152:13
+   --> $DIR/invalid-target.rs:139:13
     |
-152 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+139 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |             ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:152:22
+   --> $DIR/invalid-target.rs:139:22
     |
-152 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+139 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                      ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:152:32
+   --> $DIR/invalid-target.rs:139:32
     |
-152 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+139 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:152:52
+   --> $DIR/invalid-target.rs:139:52
     |
-152 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+139 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                    ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:152:65
+   --> $DIR/invalid-target.rs:139:65
     |
-152 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+139 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                 ^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:152:71
+   --> $DIR/invalid-target.rs:139:71
     |
-152 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+139 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                       ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a struct field
-   --> $DIR/invalid-target.rs:153:13
-    |
-153 |             unroll_loops, // fn/closure-only
-    |             ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a union
-   --> $DIR/invalid-target.rs:160:5
+   --> $DIR/invalid-target.rs:146:5
     |
-160 |     sampler, block, sampled_image, generic_image_type, // struct-only
+146 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a union
-   --> $DIR/invalid-target.rs:160:14
+   --> $DIR/invalid-target.rs:146:14
     |
-160 |     sampler, block, sampled_image, generic_image_type, // struct-only
+146 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
 error: attribute is only valid on a struct, not on a union
-   --> $DIR/invalid-target.rs:160:21
+   --> $DIR/invalid-target.rs:146:21
     |
-160 |     sampler, block, sampled_image, generic_image_type, // struct-only
+146 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a union
-   --> $DIR/invalid-target.rs:160:36
+   --> $DIR/invalid-target.rs:146:36
     |
-160 |     sampler, block, sampled_image, generic_image_type, // struct-only
+146 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a union
-   --> $DIR/invalid-target.rs:161:5
+   --> $DIR/invalid-target.rs:147:5
     |
-161 |     vertex, // fn-only
+147 |     vertex, // fn-only
     |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a union
-   --> $DIR/invalid-target.rs:162:5
+   --> $DIR/invalid-target.rs:148:5
     |
-162 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+148 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a union
-   --> $DIR/invalid-target.rs:162:14
+   --> $DIR/invalid-target.rs:148:14
     |
-162 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+148 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a union
-   --> $DIR/invalid-target.rs:162:24
+   --> $DIR/invalid-target.rs:148:24
     |
-162 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+148 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a union
-   --> $DIR/invalid-target.rs:162:44
+   --> $DIR/invalid-target.rs:148:44
     |
-162 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+148 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a union
-   --> $DIR/invalid-target.rs:162:57
+   --> $DIR/invalid-target.rs:148:57
     |
-162 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+148 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a union
-   --> $DIR/invalid-target.rs:162:63
+   --> $DIR/invalid-target.rs:148:63
     |
-162 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+148 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a union
-   --> $DIR/invalid-target.rs:163:5
-    |
-163 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:167:9
+   --> $DIR/invalid-target.rs:152:9
     |
-167 |         sampler, block, sampled_image, generic_image_type, // struct-only
+152 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:167:18
+   --> $DIR/invalid-target.rs:152:18
     |
-167 |         sampler, block, sampled_image, generic_image_type, // struct-only
+152 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:167:25
+   --> $DIR/invalid-target.rs:152:25
     |
-167 |         sampler, block, sampled_image, generic_image_type, // struct-only
+152 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:167:40
+   --> $DIR/invalid-target.rs:152:40
     |
-167 |         sampler, block, sampled_image, generic_image_type, // struct-only
+152 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a struct field
-   --> $DIR/invalid-target.rs:168:9
+   --> $DIR/invalid-target.rs:153:9
     |
-168 |         vertex, // fn-only
+153 |         vertex, // fn-only
     |         ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:169:9
+   --> $DIR/invalid-target.rs:154:9
     |
-169 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+154 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:169:18
+   --> $DIR/invalid-target.rs:154:18
     |
-169 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+154 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:169:28
+   --> $DIR/invalid-target.rs:154:28
     |
-169 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+154 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:169:48
+   --> $DIR/invalid-target.rs:154:48
     |
-169 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+154 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:169:61
+   --> $DIR/invalid-target.rs:154:61
     |
-169 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+154 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:169:67
+   --> $DIR/invalid-target.rs:154:67
     |
-169 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+154 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a struct field
-   --> $DIR/invalid-target.rs:170:9
-    |
-170 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a struct
-   --> $DIR/invalid-target.rs:176:5
+   --> $DIR/invalid-target.rs:160:5
     |
-176 |     vertex, // fn-only
+160 |     vertex, // fn-only
     |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct
-   --> $DIR/invalid-target.rs:177:5
+   --> $DIR/invalid-target.rs:161:5
     |
-177 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+161 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct
-   --> $DIR/invalid-target.rs:177:14
+   --> $DIR/invalid-target.rs:161:14
     |
-177 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+161 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct
-   --> $DIR/invalid-target.rs:177:24
+   --> $DIR/invalid-target.rs:161:24
     |
-177 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+161 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct
-   --> $DIR/invalid-target.rs:177:44
+   --> $DIR/invalid-target.rs:161:44
     |
-177 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+161 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct
-   --> $DIR/invalid-target.rs:177:57
+   --> $DIR/invalid-target.rs:161:57
     |
-177 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+161 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a struct
-   --> $DIR/invalid-target.rs:177:63
+   --> $DIR/invalid-target.rs:161:63
     |
-177 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+161 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a struct
-   --> $DIR/invalid-target.rs:178:5
-    |
-178 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:182:9
+   --> $DIR/invalid-target.rs:165:9
     |
-182 |         sampler, block, sampled_image, generic_image_type, // struct-only
+165 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:182:18
+   --> $DIR/invalid-target.rs:165:18
     |
-182 |         sampler, block, sampled_image, generic_image_type, // struct-only
+165 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:182:25
+   --> $DIR/invalid-target.rs:165:25
     |
-182 |         sampler, block, sampled_image, generic_image_type, // struct-only
+165 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a struct field
-   --> $DIR/invalid-target.rs:182:40
+   --> $DIR/invalid-target.rs:165:40
     |
-182 |         sampler, block, sampled_image, generic_image_type, // struct-only
+165 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a struct field
-   --> $DIR/invalid-target.rs:183:9
+   --> $DIR/invalid-target.rs:166:9
     |
-183 |         vertex, // fn-only
+166 |         vertex, // fn-only
     |         ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:184:9
+   --> $DIR/invalid-target.rs:167:9
     |
-184 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+167 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:184:18
+   --> $DIR/invalid-target.rs:167:18
     |
-184 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+167 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:184:28
+   --> $DIR/invalid-target.rs:167:28
     |
-184 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+167 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:184:48
+   --> $DIR/invalid-target.rs:167:48
     |
-184 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+167 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:184:61
+   --> $DIR/invalid-target.rs:167:61
     |
-184 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+167 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a struct field
-   --> $DIR/invalid-target.rs:184:67
+   --> $DIR/invalid-target.rs:167:67
     |
-184 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+167 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                   ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a struct field
-   --> $DIR/invalid-target.rs:185:9
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:173:5
     |
-185 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:191:5
-    |
-191 |     sampler, block, sampled_image, generic_image_type, // struct-only
+173 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:191:14
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:173:14
     |
-191 |     sampler, block, sampled_image, generic_image_type, // struct-only
+173 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:191:21
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:173:21
     |
-191 |     sampler, block, sampled_image, generic_image_type, // struct-only
+173 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:191:36
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:173:36
     |
-191 |     sampler, block, sampled_image, generic_image_type, // struct-only
+173 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
-error: attribute is only valid on a function, not on a item
-   --> $DIR/invalid-target.rs:192:5
+error: attribute is only valid on a function, not on a implementation block
+   --> $DIR/invalid-target.rs:174:5
     |
-192 |     vertex, // fn-only
+174 |     vertex, // fn-only
     |     ^^^^^^
 
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:193:5
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:175:5
     |
-193 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+175 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:193:14
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:175:14
     |
-193 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+175 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:193:24
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:175:24
     |
-193 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+175 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:193:44
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:175:44
     |
-193 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+175 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:193:57
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:175:57
     |
-193 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+175 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:193:63
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:175:63
     |
-193 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+175 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a item
-   --> $DIR/invalid-target.rs:194:5
-    |
-194 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a trait alias
-   --> $DIR/invalid-target.rs:213:5
+   --> $DIR/invalid-target.rs:193:5
     |
-213 |     sampler, block, sampled_image, generic_image_type, // struct-only
+193 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a trait alias
-   --> $DIR/invalid-target.rs:213:14
+   --> $DIR/invalid-target.rs:193:14
     |
-213 |     sampler, block, sampled_image, generic_image_type, // struct-only
+193 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
 error: attribute is only valid on a struct, not on a trait alias
-   --> $DIR/invalid-target.rs:213:21
+   --> $DIR/invalid-target.rs:193:21
     |
-213 |     sampler, block, sampled_image, generic_image_type, // struct-only
+193 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a trait alias
-   --> $DIR/invalid-target.rs:213:36
+   --> $DIR/invalid-target.rs:193:36
     |
-213 |     sampler, block, sampled_image, generic_image_type, // struct-only
+193 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a trait alias
-   --> $DIR/invalid-target.rs:214:5
+   --> $DIR/invalid-target.rs:194:5
     |
-214 |     vertex, // fn-only
+194 |     vertex, // fn-only
     |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait alias
-   --> $DIR/invalid-target.rs:215:5
+   --> $DIR/invalid-target.rs:195:5
     |
-215 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+195 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait alias
-   --> $DIR/invalid-target.rs:215:14
+   --> $DIR/invalid-target.rs:195:14
     |
-215 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+195 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait alias
-   --> $DIR/invalid-target.rs:215:24
+   --> $DIR/invalid-target.rs:195:24
     |
-215 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+195 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait alias
-   --> $DIR/invalid-target.rs:215:44
+   --> $DIR/invalid-target.rs:195:44
     |
-215 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+195 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait alias
-   --> $DIR/invalid-target.rs:215:57
+   --> $DIR/invalid-target.rs:195:57
     |
-215 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+195 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a trait alias
-   --> $DIR/invalid-target.rs:215:63
+   --> $DIR/invalid-target.rs:195:63
     |
-215 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+195 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a trait alias
-   --> $DIR/invalid-target.rs:216:5
-    |
-216 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a trait
-   --> $DIR/invalid-target.rs:221:5
+   --> $DIR/invalid-target.rs:200:5
     |
-221 |     sampler, block, sampled_image, generic_image_type, // struct-only
+200 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
 error: attribute is only valid on a struct, not on a trait
-   --> $DIR/invalid-target.rs:221:14
+   --> $DIR/invalid-target.rs:200:14
     |
-221 |     sampler, block, sampled_image, generic_image_type, // struct-only
+200 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
 error: attribute is only valid on a struct, not on a trait
-   --> $DIR/invalid-target.rs:221:21
+   --> $DIR/invalid-target.rs:200:21
     |
-221 |     sampler, block, sampled_image, generic_image_type, // struct-only
+200 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a trait
-   --> $DIR/invalid-target.rs:221:36
+   --> $DIR/invalid-target.rs:200:36
     |
-221 |     sampler, block, sampled_image, generic_image_type, // struct-only
+200 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a trait
-   --> $DIR/invalid-target.rs:222:5
+   --> $DIR/invalid-target.rs:201:5
     |
-222 |     vertex, // fn-only
+201 |     vertex, // fn-only
     |     ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait
-   --> $DIR/invalid-target.rs:223:5
+   --> $DIR/invalid-target.rs:202:5
     |
-223 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+202 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait
-   --> $DIR/invalid-target.rs:223:14
+   --> $DIR/invalid-target.rs:202:14
     |
-223 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+202 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait
-   --> $DIR/invalid-target.rs:223:24
+   --> $DIR/invalid-target.rs:202:24
     |
-223 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+202 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait
-   --> $DIR/invalid-target.rs:223:44
+   --> $DIR/invalid-target.rs:202:44
     |
-223 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+202 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a trait
-   --> $DIR/invalid-target.rs:223:57
+   --> $DIR/invalid-target.rs:202:57
     |
-223 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+202 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a trait
-   --> $DIR/invalid-target.rs:223:63
+   --> $DIR/invalid-target.rs:202:63
     |
-223 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+202 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a trait
-   --> $DIR/invalid-target.rs:224:5
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:234:5
     |
-224 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:259:5
-    |
-259 |     sampler, block, sampled_image, generic_image_type, // struct-only
+234 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:259:14
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:234:14
     |
-259 |     sampler, block, sampled_image, generic_image_type, // struct-only
+234 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:259:21
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:234:21
     |
-259 |     sampler, block, sampled_image, generic_image_type, // struct-only
+234 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
-error: attribute is only valid on a struct, not on a item
-   --> $DIR/invalid-target.rs:259:36
+error: attribute is only valid on a struct, not on a implementation block
+   --> $DIR/invalid-target.rs:234:36
     |
-259 |     sampler, block, sampled_image, generic_image_type, // struct-only
+234 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
-error: attribute is only valid on a function, not on a item
-   --> $DIR/invalid-target.rs:260:5
+error: attribute is only valid on a function, not on a implementation block
+   --> $DIR/invalid-target.rs:235:5
     |
-260 |     vertex, // fn-only
+235 |     vertex, // fn-only
     |     ^^^^^^
 
-error: attribute is only valid on a function parameter, not on a item
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:236:5
+    |
+236 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |     ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:236:14
+    |
+236 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |              ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:236:24
+    |
+236 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:236:44
+    |
+236 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                            ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:236:57
+    |
+236 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                         ^^^^
+
+error: attribute is only valid on a function parameter, not on a implementation block
+   --> $DIR/invalid-target.rs:236:63
+    |
+236 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                               ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a function
    --> $DIR/invalid-target.rs:261:5
     |
-261 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+261 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |     ^^^^^^^
 
-error: attribute is only valid on a function parameter, not on a item
+error: attribute is only valid on a struct, not on a function
    --> $DIR/invalid-target.rs:261:14
     |
-261 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |              ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:261:24
-    |
-261 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:261:44
-    |
-261 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                            ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:261:57
-    |
-261 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                         ^^^^
-
-error: attribute is only valid on a function parameter, not on a item
-   --> $DIR/invalid-target.rs:261:63
-    |
-261 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                               ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a item
-   --> $DIR/invalid-target.rs:262:5
-    |
-262 |     unroll_loops, // fn/closure-only
-    |     ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a function
-   --> $DIR/invalid-target.rs:289:5
-    |
-289 |     sampler, block, sampled_image, generic_image_type, // struct-only
-    |     ^^^^^^^
-
-error: attribute is only valid on a struct, not on a function
-   --> $DIR/invalid-target.rs:289:14
-    |
-289 |     sampler, block, sampled_image, generic_image_type, // struct-only
+261 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |              ^^^^^
 
 error: attribute is only valid on a struct, not on a function
-   --> $DIR/invalid-target.rs:289:21
+   --> $DIR/invalid-target.rs:261:21
     |
-289 |     sampler, block, sampled_image, generic_image_type, // struct-only
+261 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                     ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a function
-   --> $DIR/invalid-target.rs:289:36
+   --> $DIR/invalid-target.rs:261:36
     |
-289 |     sampler, block, sampled_image, generic_image_type, // struct-only
+261 |     sampler, block, sampled_image, generic_image_type, // struct-only
     |                                    ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a function
-   --> $DIR/invalid-target.rs:290:5
+   --> $DIR/invalid-target.rs:262:5
     |
-290 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+262 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |     ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a function
-   --> $DIR/invalid-target.rs:290:14
+   --> $DIR/invalid-target.rs:262:14
     |
-290 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+262 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |              ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a function
-   --> $DIR/invalid-target.rs:290:24
+   --> $DIR/invalid-target.rs:262:24
     |
-290 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+262 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a function
-   --> $DIR/invalid-target.rs:290:44
+   --> $DIR/invalid-target.rs:262:44
     |
-290 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+262 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                            ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a function
-   --> $DIR/invalid-target.rs:290:57
+   --> $DIR/invalid-target.rs:262:57
     |
-290 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+262 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                         ^^^^
 
 error: attribute is only valid on a function parameter, not on a function
-   --> $DIR/invalid-target.rs:290:63
+   --> $DIR/invalid-target.rs:262:63
     |
-290 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+262 |     uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                               ^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a function param
-   --> $DIR/invalid-target.rs:294:9
-    |
-294 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a function param
-   --> $DIR/invalid-target.rs:294:18
-    |
-294 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a function param
-   --> $DIR/invalid-target.rs:294:25
-    |
-294 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a function param
-   --> $DIR/invalid-target.rs:294:40
-    |
-294 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a function param
-   --> $DIR/invalid-target.rs:295:9
-    |
-295 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function or closure, not on a function param
-   --> $DIR/invalid-target.rs:296:9
-    |
-296 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a statement
-   --> $DIR/invalid-target.rs:301:9
-    |
-301 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a statement
-   --> $DIR/invalid-target.rs:301:18
-    |
-301 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a statement
-   --> $DIR/invalid-target.rs:301:25
-    |
-301 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a statement
-   --> $DIR/invalid-target.rs:301:40
-    |
-301 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a statement
-   --> $DIR/invalid-target.rs:302:9
-    |
-302 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a statement
-   --> $DIR/invalid-target.rs:303:9
-    |
-303 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a statement
-   --> $DIR/invalid-target.rs:303:18
-    |
-303 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a statement
-   --> $DIR/invalid-target.rs:303:28
-    |
-303 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a statement
-   --> $DIR/invalid-target.rs:303:48
-    |
-303 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a statement
-   --> $DIR/invalid-target.rs:303:61
-    |
-303 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a statement
-   --> $DIR/invalid-target.rs:303:67
-    |
-303 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a statement
-   --> $DIR/invalid-target.rs:304:9
-    |
-304 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a closure
-   --> $DIR/invalid-target.rs:309:13
-    |
-309 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |             ^^^^^^^
-
-error: attribute is only valid on a struct, not on a closure
-   --> $DIR/invalid-target.rs:309:22
-    |
-309 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                      ^^^^^
-
-error: attribute is only valid on a struct, not on a closure
-   --> $DIR/invalid-target.rs:309:29
-    |
-309 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                             ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a closure
-   --> $DIR/invalid-target.rs:309:44
-    |
-309 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a closure
-   --> $DIR/invalid-target.rs:310:13
-    |
-310 |             vertex, // fn-only
-    |             ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a closure
-   --> $DIR/invalid-target.rs:311:13
-    |
-311 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |             ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a closure
-   --> $DIR/invalid-target.rs:311:22
-    |
-311 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                      ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a closure
-   --> $DIR/invalid-target.rs:311:32
-    |
-311 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a closure
-   --> $DIR/invalid-target.rs:311:52
-    |
-311 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                    ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a closure
-   --> $DIR/invalid-target.rs:311:65
-    |
-311 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                 ^^^^
-
-error: attribute is only valid on a function parameter, not on a closure
-   --> $DIR/invalid-target.rs:311:71
-    |
-311 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                       ^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a expression
-   --> $DIR/invalid-target.rs:317:13
-    |
-317 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |             ^^^^^^^
-
-error: attribute is only valid on a struct, not on a expression
-   --> $DIR/invalid-target.rs:317:22
-    |
-317 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                      ^^^^^
-
-error: attribute is only valid on a struct, not on a expression
-   --> $DIR/invalid-target.rs:317:29
-    |
-317 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                             ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a expression
-   --> $DIR/invalid-target.rs:317:44
-    |
-317 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a expression
-   --> $DIR/invalid-target.rs:318:13
-    |
-318 |             vertex, // fn-only
-    |             ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a expression
-   --> $DIR/invalid-target.rs:319:13
-    |
-319 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |             ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a expression
-   --> $DIR/invalid-target.rs:319:22
-    |
-319 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                      ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a expression
-   --> $DIR/invalid-target.rs:319:32
-    |
-319 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a expression
-   --> $DIR/invalid-target.rs:319:52
-    |
-319 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                    ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a expression
-   --> $DIR/invalid-target.rs:319:65
-    |
-319 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                 ^^^^
-
-error: attribute is only valid on a function parameter, not on a expression
-   --> $DIR/invalid-target.rs:319:71
-    |
-319 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                       ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a expression
-   --> $DIR/invalid-target.rs:320:13
-    |
-320 |             unroll_loops, // fn/closure-only
-    |             ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a match arm
-   --> $DIR/invalid-target.rs:327:13
-    |
-327 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |             ^^^^^^^
-
-error: attribute is only valid on a struct, not on a match arm
-   --> $DIR/invalid-target.rs:327:22
-    |
-327 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                      ^^^^^
-
-error: attribute is only valid on a struct, not on a match arm
-   --> $DIR/invalid-target.rs:327:29
-    |
-327 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                             ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a match arm
-   --> $DIR/invalid-target.rs:327:44
-    |
-327 |             sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a match arm
-   --> $DIR/invalid-target.rs:328:13
-    |
-328 |             vertex, // fn-only
-    |             ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a match arm
-   --> $DIR/invalid-target.rs:329:13
-    |
-329 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |             ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a match arm
-   --> $DIR/invalid-target.rs:329:22
-    |
-329 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                      ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a match arm
-   --> $DIR/invalid-target.rs:329:32
-    |
-329 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a match arm
-   --> $DIR/invalid-target.rs:329:52
-    |
-329 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                    ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a match arm
-   --> $DIR/invalid-target.rs:329:65
-    |
-329 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                 ^^^^
-
-error: attribute is only valid on a function parameter, not on a match arm
-   --> $DIR/invalid-target.rs:329:71
-    |
-329 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                       ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a match arm
-   --> $DIR/invalid-target.rs:330:13
-    |
-330 |             unroll_loops, // fn/closure-only
-    |             ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:338:9
-    |
-338 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:338:18
-    |
-338 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:338:25
-    |
-338 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:338:40
-    |
-338 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:339:9
-    |
-339 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:340:9
-    |
-340 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:340:18
-    |
-340 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:340:28
-    |
-340 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:340:48
-    |
-340 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:340:61
-    |
-340 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:340:67
-    |
-340 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a lifetime parameter
-   --> $DIR/invalid-target.rs:341:9
-    |
-341 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a type parameter
-   --> $DIR/invalid-target.rs:344:9
-    |
-344 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a type parameter
-   --> $DIR/invalid-target.rs:344:18
-    |
-344 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a type parameter
-   --> $DIR/invalid-target.rs:344:25
-    |
-344 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a type parameter
-   --> $DIR/invalid-target.rs:344:40
-    |
-344 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a type parameter
-   --> $DIR/invalid-target.rs:345:9
-    |
-345 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type parameter
-   --> $DIR/invalid-target.rs:346:9
-    |
-346 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type parameter
-   --> $DIR/invalid-target.rs:346:18
-    |
-346 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type parameter
-   --> $DIR/invalid-target.rs:346:28
-    |
-346 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type parameter
-   --> $DIR/invalid-target.rs:346:48
-    |
-346 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a type parameter
-   --> $DIR/invalid-target.rs:346:61
-    |
-346 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a type parameter
-   --> $DIR/invalid-target.rs:346:67
-    |
-346 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a type parameter
-   --> $DIR/invalid-target.rs:347:9
-    |
-347 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a const parameter
-   --> $DIR/invalid-target.rs:350:9
-    |
-350 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a const parameter
-   --> $DIR/invalid-target.rs:350:18
-    |
-350 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a const parameter
-   --> $DIR/invalid-target.rs:350:25
-    |
-350 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a const parameter
-   --> $DIR/invalid-target.rs:350:40
-    |
-350 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a const parameter
-   --> $DIR/invalid-target.rs:351:9
-    |
-351 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a const parameter
-   --> $DIR/invalid-target.rs:352:9
-    |
-352 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a const parameter
-   --> $DIR/invalid-target.rs:352:18
-    |
-352 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a const parameter
-   --> $DIR/invalid-target.rs:352:28
-    |
-352 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a const parameter
-   --> $DIR/invalid-target.rs:352:48
-    |
-352 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a const parameter
-   --> $DIR/invalid-target.rs:352:61
-    |
-352 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a const parameter
-   --> $DIR/invalid-target.rs:352:67
-    |
-352 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a const parameter
-   --> $DIR/invalid-target.rs:353:9
-    |
-353 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated type
-   --> $DIR/invalid-target.rs:228:9
-    |
-228 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated type
-   --> $DIR/invalid-target.rs:228:18
-    |
-228 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a associated type
-   --> $DIR/invalid-target.rs:228:25
-    |
-228 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated type
-   --> $DIR/invalid-target.rs:228:40
-    |
-228 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a associated type
-   --> $DIR/invalid-target.rs:229:9
-    |
-229 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:230:9
-    |
-230 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:230:18
-    |
-230 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:230:28
-    |
-230 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:230:48
-    |
-230 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:230:61
-    |
-230 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:230:67
-    |
-230 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a associated type
-   --> $DIR/invalid-target.rs:231:9
-    |
-231 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:236:9
-    |
-236 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:236:18
-    |
-236 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:236:25
-    |
-236 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:236:40
-    |
-236 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a associated const
-   --> $DIR/invalid-target.rs:237:9
-    |
-237 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:238:9
-    |
-238 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:238:18
-    |
-238 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:238:28
-    |
-238 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:238:48
-    |
-238 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:238:61
-    |
-238 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:238:67
-    |
-238 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a associated const
-   --> $DIR/invalid-target.rs:239:9
-    |
-239 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a required trait method
-   --> $DIR/invalid-target.rs:244:9
-    |
-244 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a required trait method
-   --> $DIR/invalid-target.rs:244:18
-    |
-244 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a required trait method
-   --> $DIR/invalid-target.rs:244:25
-    |
-244 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a required trait method
-   --> $DIR/invalid-target.rs:244:40
-    |
-244 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a required trait method
-   --> $DIR/invalid-target.rs:245:9
-    |
-245 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a required trait method
-   --> $DIR/invalid-target.rs:246:9
-    |
-246 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a required trait method
-   --> $DIR/invalid-target.rs:246:18
-    |
-246 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a required trait method
-   --> $DIR/invalid-target.rs:246:28
-    |
-246 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a required trait method
-   --> $DIR/invalid-target.rs:246:48
-    |
-246 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a required trait method
-   --> $DIR/invalid-target.rs:246:61
-    |
-246 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a required trait method
-   --> $DIR/invalid-target.rs:246:67
-    |
-246 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a required trait method
-   --> $DIR/invalid-target.rs:247:9
-    |
-247 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:252:9
-    |
-252 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:252:18
-    |
-252 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:252:25
-    |
-252 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:252:40
-    |
-252 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:253:9
-    |
-253 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:253:18
-    |
-253 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:253:28
-    |
-253 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:253:48
-    |
-253 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:253:61
-    |
-253 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:253:67
-    |
-253 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:198:9
-    |
-198 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:198:18
-    |
-198 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:198:25
-    |
-198 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:198:40
-    |
-198 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function, not on a associated const
-   --> $DIR/invalid-target.rs:199:9
-    |
-199 |         vertex, // fn-only
-    |         ^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:200:9
-    |
-200 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:200:18
-    |
-200 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:200:28
-    |
-200 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:200:48
-    |
-200 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:200:61
-    |
-200 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:200:67
-    |
-200 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a function or closure, not on a associated const
-   --> $DIR/invalid-target.rs:201:9
-    |
-201 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a inherent method
-   --> $DIR/invalid-target.rs:206:9
-    |
-206 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a struct, not on a inherent method
-   --> $DIR/invalid-target.rs:206:18
-    |
-206 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                  ^^^^^
-
-error: attribute is only valid on a struct, not on a inherent method
-   --> $DIR/invalid-target.rs:206:25
-    |
-206 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                         ^^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a inherent method
-   --> $DIR/invalid-target.rs:206:40
-    |
-206 |         sampler, block, sampled_image, generic_image_type, // struct-only
-    |                                        ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a inherent method
-   --> $DIR/invalid-target.rs:207:9
-    |
-207 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |         ^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a inherent method
-   --> $DIR/invalid-target.rs:207:18
-    |
-207 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                  ^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a inherent method
-   --> $DIR/invalid-target.rs:207:28
-    |
-207 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                            ^^^^^^^^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a inherent method
-   --> $DIR/invalid-target.rs:207:48
-    |
-207 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                ^^^^^^^^^^^
-
-error: attribute is only valid on a function parameter, not on a inherent method
-   --> $DIR/invalid-target.rs:207:61
-    |
-207 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                             ^^^^
-
-error: attribute is only valid on a function parameter, not on a inherent method
-   --> $DIR/invalid-target.rs:207:67
-    |
-207 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
-    |                                                                   ^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a associated type
    --> $DIR/invalid-target.rs:266:9
     |
 266 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |         ^^^^^^^
 
-error: attribute is only valid on a struct, not on a associated type
+error: attribute is only valid on a struct, not on a function param
    --> $DIR/invalid-target.rs:266:18
     |
 266 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                  ^^^^^
 
-error: attribute is only valid on a struct, not on a associated type
+error: attribute is only valid on a struct, not on a function param
    --> $DIR/invalid-target.rs:266:25
     |
 266 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                         ^^^^^^^^^^^^^
 
-error: attribute is only valid on a struct, not on a associated type
+error: attribute is only valid on a struct, not on a function param
    --> $DIR/invalid-target.rs:266:40
     |
 266 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                                        ^^^^^^^^^^^^^^^^^^
 
-error: attribute is only valid on a function, not on a associated type
+error: attribute is only valid on a function, not on a function param
    --> $DIR/invalid-target.rs:267:9
     |
 267 |         vertex, // fn-only
     |         ^^^^^^
 
-error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:268:9
+error: attribute is only valid on a struct, not on a statement
+   --> $DIR/invalid-target.rs:272:9
     |
-268 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+272 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a statement
+   --> $DIR/invalid-target.rs:272:18
+    |
+272 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a statement
+   --> $DIR/invalid-target.rs:272:25
+    |
+272 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a statement
+   --> $DIR/invalid-target.rs:272:40
+    |
+272 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a statement
+   --> $DIR/invalid-target.rs:273:9
+    |
+273 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a statement
+   --> $DIR/invalid-target.rs:274:9
+    |
+274 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a statement
+   --> $DIR/invalid-target.rs:274:18
+    |
+274 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a statement
+   --> $DIR/invalid-target.rs:274:28
+    |
+274 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a statement
+   --> $DIR/invalid-target.rs:274:48
+    |
+274 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a statement
+   --> $DIR/invalid-target.rs:274:61
+    |
+274 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a statement
+   --> $DIR/invalid-target.rs:274:67
+    |
+274 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a closure
+   --> $DIR/invalid-target.rs:279:13
+    |
+279 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |             ^^^^^^^
+
+error: attribute is only valid on a struct, not on a closure
+   --> $DIR/invalid-target.rs:279:22
+    |
+279 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                      ^^^^^
+
+error: attribute is only valid on a struct, not on a closure
+   --> $DIR/invalid-target.rs:279:29
+    |
+279 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                             ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a closure
+   --> $DIR/invalid-target.rs:279:44
+    |
+279 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a closure
+   --> $DIR/invalid-target.rs:280:13
+    |
+280 |             vertex, // fn-only
+    |             ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a closure
+   --> $DIR/invalid-target.rs:281:13
+    |
+281 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |             ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a closure
+   --> $DIR/invalid-target.rs:281:22
+    |
+281 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                      ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a closure
+   --> $DIR/invalid-target.rs:281:32
+    |
+281 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a closure
+   --> $DIR/invalid-target.rs:281:52
+    |
+281 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                    ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a closure
+   --> $DIR/invalid-target.rs:281:65
+    |
+281 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                 ^^^^
+
+error: attribute is only valid on a function parameter, not on a closure
+   --> $DIR/invalid-target.rs:281:71
+    |
+281 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                       ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a expression
+   --> $DIR/invalid-target.rs:287:13
+    |
+287 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |             ^^^^^^^
+
+error: attribute is only valid on a struct, not on a expression
+   --> $DIR/invalid-target.rs:287:22
+    |
+287 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                      ^^^^^
+
+error: attribute is only valid on a struct, not on a expression
+   --> $DIR/invalid-target.rs:287:29
+    |
+287 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                             ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a expression
+   --> $DIR/invalid-target.rs:287:44
+    |
+287 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a expression
+   --> $DIR/invalid-target.rs:288:13
+    |
+288 |             vertex, // fn-only
+    |             ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a expression
+   --> $DIR/invalid-target.rs:289:13
+    |
+289 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |             ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a expression
+   --> $DIR/invalid-target.rs:289:22
+    |
+289 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                      ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a expression
+   --> $DIR/invalid-target.rs:289:32
+    |
+289 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a expression
+   --> $DIR/invalid-target.rs:289:52
+    |
+289 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                    ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a expression
+   --> $DIR/invalid-target.rs:289:65
+    |
+289 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                 ^^^^
+
+error: attribute is only valid on a function parameter, not on a expression
+   --> $DIR/invalid-target.rs:289:71
+    |
+289 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                       ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a match arm
+   --> $DIR/invalid-target.rs:296:13
+    |
+296 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |             ^^^^^^^
+
+error: attribute is only valid on a struct, not on a match arm
+   --> $DIR/invalid-target.rs:296:22
+    |
+296 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                      ^^^^^
+
+error: attribute is only valid on a struct, not on a match arm
+   --> $DIR/invalid-target.rs:296:29
+    |
+296 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                             ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a match arm
+   --> $DIR/invalid-target.rs:296:44
+    |
+296 |             sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a match arm
+   --> $DIR/invalid-target.rs:297:13
+    |
+297 |             vertex, // fn-only
+    |             ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a match arm
+   --> $DIR/invalid-target.rs:298:13
+    |
+298 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |             ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a match arm
+   --> $DIR/invalid-target.rs:298:22
+    |
+298 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                      ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a match arm
+   --> $DIR/invalid-target.rs:298:32
+    |
+298 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a match arm
+   --> $DIR/invalid-target.rs:298:52
+    |
+298 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                    ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a match arm
+   --> $DIR/invalid-target.rs:298:65
+    |
+298 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                 ^^^^
+
+error: attribute is only valid on a function parameter, not on a match arm
+   --> $DIR/invalid-target.rs:298:71
+    |
+298 |             uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                       ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:306:9
+    |
+306 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:306:18
+    |
+306 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:306:25
+    |
+306 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:306:40
+    |
+306 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:307:9
+    |
+307 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:308:9
+    |
+308 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:308:18
+    |
+308 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:308:28
+    |
+308 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:308:48
+    |
+308 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:308:61
+    |
+308 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a lifetime parameter
+   --> $DIR/invalid-target.rs:308:67
+    |
+308 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a type parameter
+   --> $DIR/invalid-target.rs:311:9
+    |
+311 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a type parameter
+   --> $DIR/invalid-target.rs:311:18
+    |
+311 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a type parameter
+   --> $DIR/invalid-target.rs:311:25
+    |
+311 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a type parameter
+   --> $DIR/invalid-target.rs:311:40
+    |
+311 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a type parameter
+   --> $DIR/invalid-target.rs:312:9
+    |
+312 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a type parameter
+   --> $DIR/invalid-target.rs:313:9
+    |
+313 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a type parameter
+   --> $DIR/invalid-target.rs:313:18
+    |
+313 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a type parameter
+   --> $DIR/invalid-target.rs:313:28
+    |
+313 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a type parameter
+   --> $DIR/invalid-target.rs:313:48
+    |
+313 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a type parameter
+   --> $DIR/invalid-target.rs:313:61
+    |
+313 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a type parameter
+   --> $DIR/invalid-target.rs:313:67
+    |
+313 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a const parameter
+   --> $DIR/invalid-target.rs:316:9
+    |
+316 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a const parameter
+   --> $DIR/invalid-target.rs:316:18
+    |
+316 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a const parameter
+   --> $DIR/invalid-target.rs:316:25
+    |
+316 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a const parameter
+   --> $DIR/invalid-target.rs:316:40
+    |
+316 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a const parameter
+   --> $DIR/invalid-target.rs:317:9
+    |
+317 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a const parameter
+   --> $DIR/invalid-target.rs:318:9
+    |
+318 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a const parameter
+   --> $DIR/invalid-target.rs:318:18
+    |
+318 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a const parameter
+   --> $DIR/invalid-target.rs:318:28
+    |
+318 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a const parameter
+   --> $DIR/invalid-target.rs:318:48
+    |
+318 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a const parameter
+   --> $DIR/invalid-target.rs:318:61
+    |
+318 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a const parameter
+   --> $DIR/invalid-target.rs:318:67
+    |
+318 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:206:9
+    |
+206 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:206:18
+    |
+206 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:206:25
+    |
+206 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:206:40
+    |
+206 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a associated type
+   --> $DIR/invalid-target.rs:207:9
+    |
+207 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated type
+   --> $DIR/invalid-target.rs:208:9
+    |
+208 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:268:18
+   --> $DIR/invalid-target.rs:208:18
     |
-268 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+208 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:268:28
+   --> $DIR/invalid-target.rs:208:28
     |
-268 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+208 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:268:48
+   --> $DIR/invalid-target.rs:208:48
     |
-268 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+208 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:268:61
+   --> $DIR/invalid-target.rs:208:61
     |
-268 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+208 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a associated type
-   --> $DIR/invalid-target.rs:268:67
+   --> $DIR/invalid-target.rs:208:67
     |
-268 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+208 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                   ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a associated type
-   --> $DIR/invalid-target.rs:269:9
-    |
-269 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:274:9
+   --> $DIR/invalid-target.rs:213:9
     |
-274 |         sampler, block, sampled_image, generic_image_type, // struct-only
+213 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:274:18
+   --> $DIR/invalid-target.rs:213:18
     |
-274 |         sampler, block, sampled_image, generic_image_type, // struct-only
+213 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:274:25
+   --> $DIR/invalid-target.rs:213:25
     |
-274 |         sampler, block, sampled_image, generic_image_type, // struct-only
+213 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a associated const
-   --> $DIR/invalid-target.rs:274:40
+   --> $DIR/invalid-target.rs:213:40
     |
-274 |         sampler, block, sampled_image, generic_image_type, // struct-only
+213 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a associated const
-   --> $DIR/invalid-target.rs:275:9
+   --> $DIR/invalid-target.rs:214:9
     |
-275 |         vertex, // fn-only
+214 |         vertex, // fn-only
     |         ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:276:9
+   --> $DIR/invalid-target.rs:215:9
     |
-276 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+215 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:276:18
+   --> $DIR/invalid-target.rs:215:18
     |
-276 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+215 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:276:28
+   --> $DIR/invalid-target.rs:215:28
     |
-276 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+215 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:276:48
+   --> $DIR/invalid-target.rs:215:48
     |
-276 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+215 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:276:61
+   --> $DIR/invalid-target.rs:215:61
     |
-276 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+215 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a associated const
-   --> $DIR/invalid-target.rs:276:67
+   --> $DIR/invalid-target.rs:215:67
     |
-276 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+215 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                   ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a associated const
-   --> $DIR/invalid-target.rs:277:9
+error: attribute is only valid on a struct, not on a required trait method
+   --> $DIR/invalid-target.rs:220:9
     |
-277 |         unroll_loops, // fn/closure-only
-    |         ^^^^^^^^^^^^
+220 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a required trait method
+   --> $DIR/invalid-target.rs:220:18
+    |
+220 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a required trait method
+   --> $DIR/invalid-target.rs:220:25
+    |
+220 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a required trait method
+   --> $DIR/invalid-target.rs:220:40
+    |
+220 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a required trait method
+   --> $DIR/invalid-target.rs:221:9
+    |
+221 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a required trait method
+   --> $DIR/invalid-target.rs:222:9
+    |
+222 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a required trait method
+   --> $DIR/invalid-target.rs:222:18
+    |
+222 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a required trait method
+   --> $DIR/invalid-target.rs:222:28
+    |
+222 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a required trait method
+   --> $DIR/invalid-target.rs:222:48
+    |
+222 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a required trait method
+   --> $DIR/invalid-target.rs:222:61
+    |
+222 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a required trait method
+   --> $DIR/invalid-target.rs:222:67
+    |
+222 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:282:9
+   --> $DIR/invalid-target.rs:227:9
     |
-282 |         sampler, block, sampled_image, generic_image_type, // struct-only
+227 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:282:18
+   --> $DIR/invalid-target.rs:227:18
     |
-282 |         sampler, block, sampled_image, generic_image_type, // struct-only
+227 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:282:25
+   --> $DIR/invalid-target.rs:227:25
     |
-282 |         sampler, block, sampled_image, generic_image_type, // struct-only
+227 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a provided trait method
-   --> $DIR/invalid-target.rs:282:40
+   --> $DIR/invalid-target.rs:227:40
     |
-282 |         sampler, block, sampled_image, generic_image_type, // struct-only
+227 |         sampler, block, sampled_image, generic_image_type, // struct-only
     |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:283:9
+   --> $DIR/invalid-target.rs:228:9
     |
-283 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+228 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:283:18
+   --> $DIR/invalid-target.rs:228:18
     |
-283 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+228 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:283:28
+   --> $DIR/invalid-target.rs:228:28
     |
-283 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+228 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:283:48
+   --> $DIR/invalid-target.rs:228:48
     |
-283 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+228 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:283:61
+   --> $DIR/invalid-target.rs:228:61
     |
-283 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+228 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a provided trait method
-   --> $DIR/invalid-target.rs:283:67
+   --> $DIR/invalid-target.rs:228:67
     |
-283 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+228 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:179:9
+    |
+179 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:179:18
+    |
+179 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:179:25
+    |
+179 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:179:40
+    |
+179 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a associated const
+   --> $DIR/invalid-target.rs:180:9
+    |
+180 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:181:9
+    |
+181 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:181:18
+    |
+181 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:181:28
+    |
+181 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:181:48
+    |
+181 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:181:61
+    |
+181 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:181:67
+    |
+181 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a inherent method
+   --> $DIR/invalid-target.rs:186:9
+    |
+186 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a inherent method
+   --> $DIR/invalid-target.rs:186:18
+    |
+186 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a inherent method
+   --> $DIR/invalid-target.rs:186:25
+    |
+186 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a inherent method
+   --> $DIR/invalid-target.rs:186:40
+    |
+186 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a inherent method
+   --> $DIR/invalid-target.rs:187:9
+    |
+187 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a inherent method
+   --> $DIR/invalid-target.rs:187:18
+    |
+187 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a inherent method
+   --> $DIR/invalid-target.rs:187:28
+    |
+187 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a inherent method
+   --> $DIR/invalid-target.rs:187:48
+    |
+187 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a inherent method
+   --> $DIR/invalid-target.rs:187:61
+    |
+187 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a inherent method
+   --> $DIR/invalid-target.rs:187:67
+    |
+187 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:240:9
+    |
+240 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:240:18
+    |
+240 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:240:25
+    |
+240 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated type
+   --> $DIR/invalid-target.rs:240:40
+    |
+240 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a associated type
+   --> $DIR/invalid-target.rs:241:9
+    |
+241 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated type
+   --> $DIR/invalid-target.rs:242:9
+    |
+242 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated type
+   --> $DIR/invalid-target.rs:242:18
+    |
+242 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated type
+   --> $DIR/invalid-target.rs:242:28
+    |
+242 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated type
+   --> $DIR/invalid-target.rs:242:48
+    |
+242 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated type
+   --> $DIR/invalid-target.rs:242:61
+    |
+242 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a associated type
+   --> $DIR/invalid-target.rs:242:67
+    |
+242 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:247:9
+    |
+247 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:247:18
+    |
+247 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:247:25
+    |
+247 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a associated const
+   --> $DIR/invalid-target.rs:247:40
+    |
+247 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function, not on a associated const
+   --> $DIR/invalid-target.rs:248:9
+    |
+248 |         vertex, // fn-only
+    |         ^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:249:9
+    |
+249 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:249:18
+    |
+249 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:249:28
+    |
+249 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:249:48
+    |
+249 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:249:61
+    |
+249 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a associated const
+   --> $DIR/invalid-target.rs:249:67
+    |
+249 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                                   ^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a provided trait method
+   --> $DIR/invalid-target.rs:254:9
+    |
+254 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a struct, not on a provided trait method
+   --> $DIR/invalid-target.rs:254:18
+    |
+254 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                  ^^^^^
+
+error: attribute is only valid on a struct, not on a provided trait method
+   --> $DIR/invalid-target.rs:254:25
+    |
+254 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                         ^^^^^^^^^^^^^
+
+error: attribute is only valid on a struct, not on a provided trait method
+   --> $DIR/invalid-target.rs:254:40
+    |
+254 |         sampler, block, sampled_image, generic_image_type, // struct-only
+    |                                        ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a provided trait method
+   --> $DIR/invalid-target.rs:255:9
+    |
+255 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |         ^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a provided trait method
+   --> $DIR/invalid-target.rs:255:18
+    |
+255 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                  ^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a provided trait method
+   --> $DIR/invalid-target.rs:255:28
+    |
+255 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                            ^^^^^^^^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a provided trait method
+   --> $DIR/invalid-target.rs:255:48
+    |
+255 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                ^^^^^^^^^^^
+
+error: attribute is only valid on a function parameter, not on a provided trait method
+   --> $DIR/invalid-target.rs:255:61
+    |
+255 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+    |                                                             ^^^^
+
+error: attribute is only valid on a function parameter, not on a provided trait method
+   --> $DIR/invalid-target.rs:255:67
+    |
+255 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
     |                                                                   ^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign type
-  --> $DIR/invalid-target.rs:75:9
+  --> $DIR/invalid-target.rs:71:9
    |
-75 |         sampler, block, sampled_image, generic_image_type, // struct-only
+71 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign type
-  --> $DIR/invalid-target.rs:75:18
+  --> $DIR/invalid-target.rs:71:18
    |
-75 |         sampler, block, sampled_image, generic_image_type, // struct-only
+71 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a foreign type
-  --> $DIR/invalid-target.rs:75:25
+  --> $DIR/invalid-target.rs:71:25
    |
-75 |         sampler, block, sampled_image, generic_image_type, // struct-only
+71 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign type
-  --> $DIR/invalid-target.rs:75:40
+  --> $DIR/invalid-target.rs:71:40
    |
-75 |         sampler, block, sampled_image, generic_image_type, // struct-only
+71 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a foreign type
-  --> $DIR/invalid-target.rs:76:9
+  --> $DIR/invalid-target.rs:72:9
    |
-76 |         vertex, // fn-only
+72 |         vertex, // fn-only
    |         ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign type
-  --> $DIR/invalid-target.rs:77:9
+  --> $DIR/invalid-target.rs:73:9
    |
-77 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+73 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign type
-  --> $DIR/invalid-target.rs:77:18
+  --> $DIR/invalid-target.rs:73:18
    |
-77 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+73 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign type
-  --> $DIR/invalid-target.rs:77:28
+  --> $DIR/invalid-target.rs:73:28
    |
-77 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+73 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign type
-  --> $DIR/invalid-target.rs:77:48
+  --> $DIR/invalid-target.rs:73:48
    |
-77 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+73 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign type
-  --> $DIR/invalid-target.rs:77:61
+  --> $DIR/invalid-target.rs:73:61
    |
-77 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+73 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign type
-  --> $DIR/invalid-target.rs:77:67
+  --> $DIR/invalid-target.rs:73:67
    |
-77 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+73 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                                   ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a foreign type
+error: attribute is only valid on a struct, not on a foreign static item
   --> $DIR/invalid-target.rs:78:9
    |
-78 |         unroll_loops, // fn/closure-only
-   |         ^^^^^^^^^^^^
-
-error: attribute is only valid on a struct, not on a foreign static item
-  --> $DIR/invalid-target.rs:83:9
-   |
-83 |         sampler, block, sampled_image, generic_image_type, // struct-only
+78 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign static item
-  --> $DIR/invalid-target.rs:83:18
+  --> $DIR/invalid-target.rs:78:18
    |
-83 |         sampler, block, sampled_image, generic_image_type, // struct-only
+78 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a foreign static item
-  --> $DIR/invalid-target.rs:83:25
+  --> $DIR/invalid-target.rs:78:25
    |
-83 |         sampler, block, sampled_image, generic_image_type, // struct-only
+78 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign static item
-  --> $DIR/invalid-target.rs:83:40
+  --> $DIR/invalid-target.rs:78:40
    |
-83 |         sampler, block, sampled_image, generic_image_type, // struct-only
+78 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a foreign static item
-  --> $DIR/invalid-target.rs:84:9
+  --> $DIR/invalid-target.rs:79:9
    |
-84 |         vertex, // fn-only
+79 |         vertex, // fn-only
    |         ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign static item
-  --> $DIR/invalid-target.rs:85:9
+  --> $DIR/invalid-target.rs:80:9
    |
-85 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+80 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign static item
-  --> $DIR/invalid-target.rs:85:18
+  --> $DIR/invalid-target.rs:80:18
    |
-85 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+80 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign static item
-  --> $DIR/invalid-target.rs:85:28
+  --> $DIR/invalid-target.rs:80:28
    |
-85 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+80 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign static item
-  --> $DIR/invalid-target.rs:85:48
+  --> $DIR/invalid-target.rs:80:48
    |
-85 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+80 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign static item
-  --> $DIR/invalid-target.rs:85:61
+  --> $DIR/invalid-target.rs:80:61
    |
-85 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+80 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign static item
-  --> $DIR/invalid-target.rs:85:67
+  --> $DIR/invalid-target.rs:80:67
    |
-85 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+80 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                                   ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a foreign static item
-  --> $DIR/invalid-target.rs:86:9
-   |
-86 |         unroll_loops, // fn/closure-only
-   |         ^^^^^^^^^^^^
-
 error: attribute is only valid on a struct, not on a foreign function
-  --> $DIR/invalid-target.rs:91:9
+  --> $DIR/invalid-target.rs:85:9
    |
-91 |         sampler, block, sampled_image, generic_image_type, // struct-only
+85 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |         ^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign function
-  --> $DIR/invalid-target.rs:91:18
+  --> $DIR/invalid-target.rs:85:18
    |
-91 |         sampler, block, sampled_image, generic_image_type, // struct-only
+85 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                  ^^^^^
 
 error: attribute is only valid on a struct, not on a foreign function
-  --> $DIR/invalid-target.rs:91:25
+  --> $DIR/invalid-target.rs:85:25
    |
-91 |         sampler, block, sampled_image, generic_image_type, // struct-only
+85 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                         ^^^^^^^^^^^^^
 
 error: attribute is only valid on a struct, not on a foreign function
-  --> $DIR/invalid-target.rs:91:40
+  --> $DIR/invalid-target.rs:85:40
    |
-91 |         sampler, block, sampled_image, generic_image_type, // struct-only
+85 |         sampler, block, sampled_image, generic_image_type, // struct-only
    |                                        ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function, not on a foreign function
-  --> $DIR/invalid-target.rs:92:9
+  --> $DIR/invalid-target.rs:86:9
    |
-92 |         vertex, // fn-only
+86 |         vertex, // fn-only
    |         ^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign function
-  --> $DIR/invalid-target.rs:93:9
+  --> $DIR/invalid-target.rs:87:9
    |
-93 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+87 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |         ^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign function
-  --> $DIR/invalid-target.rs:93:18
+  --> $DIR/invalid-target.rs:87:18
    |
-93 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+87 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                  ^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign function
-  --> $DIR/invalid-target.rs:93:28
+  --> $DIR/invalid-target.rs:87:28
    |
-93 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+87 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                            ^^^^^^^^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign function
-  --> $DIR/invalid-target.rs:93:48
+  --> $DIR/invalid-target.rs:87:48
    |
-93 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+87 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                ^^^^^^^^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign function
-  --> $DIR/invalid-target.rs:93:61
+  --> $DIR/invalid-target.rs:87:61
    |
-93 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+87 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                             ^^^^
 
 error: attribute is only valid on a function parameter, not on a foreign function
-  --> $DIR/invalid-target.rs:93:67
+  --> $DIR/invalid-target.rs:87:67
    |
-93 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
+87 |         uniform, position, descriptor_set = 0, binding = 0, flat, invariant, // param-only
    |                                                                   ^^^^^^^^^
 
-error: attribute is only valid on a function or closure, not on a foreign function
-  --> $DIR/invalid-target.rs:94:9
-   |
-94 |         unroll_loops, // fn/closure-only
-   |         ^^^^^^^^^^^^
-
-error: aborting due to 473 previous errors
+error: aborting due to 437 previous errors
 

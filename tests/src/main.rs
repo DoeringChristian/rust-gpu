@@ -13,25 +13,22 @@ use structopt::StructOpt;
     usage = "cargo compiletest [FLAGS] [FILTER]..."
 )]
 struct Opt {
-    /// Automatically update stderr/stdout files
+    /// Automatically update stderr/stdout files.
     #[structopt(long)]
     bless: bool,
 
     /// The environment to compile to the SPIR-V tests.
-    #[structopt(long)]
-    target_env: Option<String>,
+    #[structopt(long, default_value = "spv1.3")]
+    target_env: String,
 
-    /// Only run tests that match these filters
+    /// Only run tests that match these filters.
     #[structopt(name = "FILTER")]
     filters: Vec<String>,
 }
 
 impl Opt {
-    pub fn environments(&self) -> Vec<String> {
-        match &self.target_env {
-            Some(env) => env.split(',').map(String::from).collect(),
-            None => vec!["spv1.3".into()],
-        }
+    pub fn environments(&self) -> impl Iterator<Item = &str> {
+        self.target_env.split(',')
     }
 }
 
@@ -123,18 +120,25 @@ impl Runner {
                 "--crate-type dylib",
                 "-Zunstable-options",
                 "-Zcrate-attr=no_std",
-                "-Zcrate-attr=feature(register_attr,asm_const,asm_experimental_arch)",
-                "-Zcrate-attr=register_attr(spirv)",
+                "-Zcrate-attr=feature(asm_const,asm_experimental_arch)",
             ]
             .join(" ")
         }
 
-        for env in self.opt.environments() {
-            let target = format!("{}{}", TARGET_PREFIX, env);
-            let mut config = compiletest::Config::default();
-            let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
+        for (env, spirt) in self
+            .opt
+            .environments()
+            .flat_map(|env| [(env, false), (env, true)])
+        {
+            // HACK(eddyb) in order to allow *some* tests to have separate output
+            // with the SPIR-T support enabled (via `--spirt`), while keeping
+            // *most* of the tests unchanged, we take advantage of "stage IDs",
+            // which offer `// only-S` and `// ignore-S` for any stage ID `S`.
+            let stage_id = if spirt { "spirt" } else { "not_spirt" };
 
-            let flags = test_rustc_flags(
+            let target = format!("{}{}", TARGET_PREFIX, env);
+            let libs = build_deps(&self.deps_target_dir, &self.codegen_backend_path, &target);
+            let mut flags = test_rustc_flags(
                 &self.codegen_backend_path,
                 &libs,
                 &[
@@ -146,14 +150,22 @@ impl Runner {
                         .join(DepKind::ProcMacro.target_dir_suffix(&target)),
                 ],
             );
+            if spirt {
+                flags += " -Cllvm-args=--spirt";
+            }
 
-            config.target_rustcflags = Some(flags);
-            config.mode = mode.parse().expect("Invalid mode");
-            config.target = target;
-            config.src_base = self.tests_dir.join(mode);
-            config.build_base = self.compiletest_build_dir.clone();
-            config.bless = self.opt.bless;
-            config.filters = self.opt.filters.clone();
+            let config = compiletest::Config {
+                stage_id: stage_id.to_string(),
+                target_rustcflags: Some(flags),
+                mode: mode.parse().expect("Invalid mode"),
+                target,
+                src_base: self.tests_dir.join(mode),
+                build_base: self.compiletest_build_dir.clone(),
+                bless: self.opt.bless,
+                filters: self.opt.filters.clone(),
+                ..compiletest::Config::default()
+            };
+            // FIXME(eddyb) do we need this? shouldn't `compiletest` be independent?
             config.clean_rmeta();
 
             compiletest::run_tests(&config);
@@ -170,7 +182,7 @@ fn build_deps(deps_target_dir: &Path, codegen_backend_path: &Path, target: &str)
 
     // Build compiletests-deps-helper
     std::process::Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "-p",
             "compiletests-deps-helper",
@@ -260,14 +272,16 @@ fn find_lib(
         .map(|entry| entry.path())
         .filter(|path| {
             let name = {
-                let name = path.file_name();
+                let name = path.file_stem();
                 if name.is_none() {
                     return false;
                 }
                 name.unwrap()
             };
 
-            let name_matches = name.to_str().unwrap().starts_with(&expected_name);
+            let name_matches = name.to_str().unwrap().starts_with(&expected_name)
+                && name.len() == expected_name.len() + 17   // we expect our name, '-', and then 16 hexadecimal digits
+                && ends_with_dash_hash(name.to_str().unwrap());
             let extension_matches = path
                 .extension()
                 .map_or(false, |ext| ext == expected_extension);
@@ -281,6 +295,20 @@ fn find_lib(
     } else {
         paths.into_iter().next()
     })
+}
+
+/// Returns whether this string ends with a dash ('-'), followed by 16 lowercase hexadecimal characters
+fn ends_with_dash_hash(s: &str) -> bool {
+    let n = s.len();
+    if n < 17 {
+        return false;
+    }
+    let mut bytes = s.bytes().skip(n - 17);
+    if bytes.next() != Some(b'-') {
+        return false;
+    }
+
+    bytes.all(|b| b.is_ascii_hexdigit())
 }
 
 /// Paths to all of the library artifacts of dependencies needed to compile tests.
@@ -307,12 +335,18 @@ fn rust_flags(codegen_backend_path: &Path) -> String {
 
     [
         &*format!("-Zcodegen-backend={}", codegen_backend_path.display()),
+        // Ensure the codegen backend is emitted in `.d` files to force Cargo
+        // to rebuild crates compiled with it when it changes (this used to be
+        // the default until https://github.com/rust-lang/rust/pull/93969).
+        "-Zbinary-dep-depinfo",
         "-Coverflow-checks=off",
         "-Cdebug-assertions=off",
         "-Cdebuginfo=2",
         "-Cembed-bitcode=no",
         &format!("-Ctarget-feature=+{}", target_features.join(",+")),
         "-Csymbol-mangling-version=v0",
+        "-Zcrate-attr=feature(register_tool)",
+        "-Zcrate-attr=register_tool(rust_gpu)",
     ]
     .join(" ")
 }

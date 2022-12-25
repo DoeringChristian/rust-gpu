@@ -2,6 +2,7 @@
 // compile-flags: -C target-feature=+StorageImageWriteWithoutFormat
 
 use glam::*;
+use spirv_std::spirv;
 
 #[spirv(compute(threads(1)))]
 pub fn main_cs(

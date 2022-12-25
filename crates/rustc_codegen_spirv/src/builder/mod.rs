@@ -18,7 +18,7 @@ use rustc_codegen_ssa::mir::operand::OperandValue;
 use rustc_codegen_ssa::mir::place::PlaceRef;
 use rustc_codegen_ssa::traits::{
     AbiBuilderMethods, ArgAbiMethods, BackendTypes, BuilderMethods, CoverageInfoBuilderMethods,
-    DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods,
+    DebugInfoBuilderMethods, HasCodegen, StaticBuilderMethods, TypeMembershipMethods,
 };
 use rustc_errors::{DiagnosticBuilder, ErrorGuaranteed};
 use rustc_middle::mir::coverage::{
@@ -331,7 +331,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             PassMode::Pair(..) => {
                 OperandValue::Pair(next(self, idx), next(self, idx)).store(self, dst);
             }
-            PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+            PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
                 self.span(),
                 "query hooks should've made this `PassMode` impossible: {:#?}",
                 arg_abi
@@ -350,7 +350,7 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
             PassMode::Direct(_) | PassMode::Pair(..) => {
                 OperandValue::Immediate(val).store(self, dst);
             }
-            PassMode::Cast(_) | PassMode::Indirect { .. } => span_bug!(
+            PassMode::Cast(_, _) | PassMode::Indirect { .. } => span_bug!(
                 self.span(),
                 "query hooks should've made this `PassMode` impossible: {:#?}",
                 arg_abi
@@ -364,8 +364,6 @@ impl<'a, 'tcx> ArgAbiMethods<'tcx> for Builder<'a, 'tcx> {
 }
 
 impl<'a, 'tcx> AbiBuilderMethods<'tcx> for Builder<'a, 'tcx> {
-    fn apply_attrs_callsite(&mut self, _fn_abi: &FnAbi<'tcx, Ty<'tcx>>, _callsite: Self::Value) {}
-
     fn get_param(&mut self, index: usize) -> Self::Value {
         self.function_parameter_values.borrow()[&self.current_fn.def(self)][index]
     }
@@ -437,5 +435,15 @@ impl<'tcx> FnAbiOfHelpers<'tcx> for Builder<'_, 'tcx> {
         fn_abi_request: FnAbiRequest<'tcx>,
     ) -> ! {
         self.cx.handle_fn_abi_err(err, span, fn_abi_request)
+    }
+}
+
+impl<'tcx> TypeMembershipMethods<'tcx> for CodegenCx<'tcx> {
+    fn set_type_metadata(&self, _function: Self::Function, _typeid: String) {
+        // ignore
+    }
+
+    fn typeid_metadata(&self, _typeid: String) -> Self::Value {
+        todo!()
     }
 }
